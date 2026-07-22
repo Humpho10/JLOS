@@ -1,7 +1,5 @@
 // ============================================================
-// Thin client for the jlos-chatbot Laravel API. Only the DPP
-// institution has scraped/embedded content in this prototype,
-// but these calls work for any institution slug the backend has.
+// Thin client for the jlos-chatbot Laravel API.
 // ============================================================
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
@@ -26,6 +24,32 @@ export async function sendInstitutionMessage(slug, message) {
   let res;
   try {
     res = await fetch(`${API_URL}/api/institutions/${slug}/chat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ message }),
+    });
+  } catch {
+    throw new ApiError(
+      "Can't reach the assistant right now — check that the API server is running.",
+      0
+    );
+  }
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new ApiError(data?.reply || 'Something went wrong. Please try again.', res.status);
+  }
+
+  return data.reply;
+}
+
+// Institution-agnostic chat — searches content across every institution
+// and answers based on whichever one the question is actually about.
+export async function sendMessage(message) {
+  let res;
+  try {
+    res = await fetch(`${API_URL}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
       body: JSON.stringify({ message }),

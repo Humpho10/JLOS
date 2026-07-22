@@ -2,32 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Ai\Agents\InstitutionAgent;
-use App\Models\Institution;
+use App\Ai\Agents\GeneralAgent;
 use Illuminate\Http\Request;
 use Laravel\Ai\Exceptions\ProviderOverloadedException;
 use Laravel\Ai\Exceptions\RateLimitedException;
 use Throwable;
 
-class InstitutionChatController extends Controller
+class ChatController extends Controller
 {
-    public function chat(Request $request, string $slug)
+    public function chat(Request $request)
     {
         $request->validate([
             'message' => 'required|string|max:500',
         ]);
 
-        $institution = Institution::where('slug', $slug)->first();
-
-        if (! $institution) {
-            return response()->json([
-                'message' => $request->input('message'),
-                'reply' => 'Unknown institution.',
-            ], 404);
-        }
-
         try {
-            $response = (new InstitutionAgent($institution))->prompt($request->input('message'));
+            $response = (new GeneralAgent)->prompt($request->input('message'));
         } catch (RateLimitedException $e) {
             return response()->json([
                 'message' => $request->input('message'),
