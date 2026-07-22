@@ -1,0 +1,83 @@
+/* ============================================================
+   Base — CSS variables, dark theme overrides, resets, typography
+   ============================================================ */
+
+  :root{
+    --navy:#0E2A47;
+    --navy-2:#123A61;
+    --navy-3:#1B4B7A;
+    --gold:#C79A2E;
+    --gold-2:#E4BB52;
+    --maroon:#7C2333;
+    --bg:#F6F4EE;
+    --card:#FFFFFF;
+    --text:#1B2430;
+    --muted:#6B7480;
+    --line:#E7E3D8;
+    --success:#1F8A57;
+    --warn:#B4791A;
+    --shadow-sm: 0 4px 14px rgba(14,42,71,.07);
+    --shadow-md: 0 10px 24px rgba(14,42,71,.12);
+    --shadow-lg: 0 24px 60px rgba(14,42,71,.22);
+    --grad-navy: linear-gradient(135deg, var(--navy-3), var(--navy));
+    --grad-gold: linear-gradient(135deg, var(--gold-2), var(--gold));
+    --ink: var(--navy);
+    --ink-soft: var(--navy-3);
+    --glass-bg: rgba(255,255,255,.68);
+    --glass-border: rgba(255,255,255,.55);
+    --glass-input-bg: rgba(246,244,238,.55);
+    --assist-accent: #3B63D6;
+    --assist-avatar-bg: #EAF1FB;
+    --accent: #5B3DF0;
+    --accent-2: #7C4DFF;
+    --grad-accent: linear-gradient(135deg, #7C4DFF, #5B3DF0);
+    --teal: #0E9C97;
+    --teal-2: #12B5AE;
+    --grad-teal: linear-gradient(135deg, #12B5AE, #0E9C97);
+    --stat-ic-bg: rgba(255,255,255,.14);
+  }
+  body.theme-dark{
+    --bg:#10181F;
+    --card:#1B2530;
+    --text:#E7E9EC;
+    --muted:#93A0AC;
+    --line:#2B3742;
+    --ink:#F1E6C8;
+    --ink-soft:#E4BB52;
+    --shadow-sm: 0 4px 14px rgba(0,0,0,.30);
+    --shadow-md: 0 10px 24px rgba(0,0,0,.36);
+    --shadow-lg: 0 24px 60px rgba(0,0,0,.5);
+    --glass-bg: rgba(20,28,38,.6);
+    --glass-border: rgba(255,255,255,.16);
+    --glass-input-bg: rgba(255,255,255,.08);
+    --assist-accent: #7FA0F5;
+    --assist-avatar-bg: rgba(127,160,245,.16);
+    --accent: #8A6DFF;
+    --accent-2: #9C7BFF;
+    --grad-accent: linear-gradient(135deg, #9C7BFF, #6E44E8);
+    --teal: #2DD4CB;
+    --teal-2: #3FE0D6;
+    --grad-teal: linear-gradient(135deg, #3FE0D6, #159E97);
+    --stat-ic-bg: rgba(255,255,255,.1);
+  }
+  body.theme-dark .emergency-card{background:linear-gradient(135deg,#152531,#1B2F3D); border-color:#28404F;}
+  body.theme-dark .status-pill.open{background:#3A1F20; color:#F3A79E;}
+  body.theme-dark .status-pill.progress{background:#3A331A; color:#F0C976;}
+  body.theme-dark .status-pill.resolved{background:#173B29; color:#7FD9A8;}
+  body.theme-dark .mc-btn.ghost{background:#2B2618; color:var(--ink);}
+  body.theme-dark .modal-overlay-web{background:rgba(0,0,0,.65);}
+  body.theme-dark .navbar{box-shadow:0 4px 20px rgba(0,0,0,.4);}
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:'Inter',sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    min-height:100vh;
+    transition:background .25s ease, color .25s ease;
+    position:relative;
+  }
+  h1,h2,h3,h4{font-family:'Poppins',sans-serif; margin:0;}
+  img{max-width:100%;}

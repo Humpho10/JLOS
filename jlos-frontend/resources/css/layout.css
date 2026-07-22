@@ -1,0 +1,116 @@
+/* ============================================================
+   Layout — ambience, navbar, page shell/transitions
+   ============================================================ */
+
+  /* ============ CINEMATIC AMBIENCE (site-wide) ============ */
+  body::before{
+    content:""; position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.045; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  .navbar, .page, .site-footer{ position:relative; z-index:1; }
+  /* ============ NAVBAR — floating rounded card ============ */
+  .navbar{
+    position:sticky; top:14px; z-index:200;
+    margin:14px 20px 0;
+    background:var(--card);
+    backdrop-filter:saturate(160%) blur(14px);
+    -webkit-backdrop-filter:saturate(160%) blur(14px);
+    padding:0 22px;
+    height:74px;
+    border-radius:20px;
+    display:flex; align-items:center; justify-content:space-between;
+    box-shadow:0 18px 40px rgba(14,42,71,.16), 0 2px 6px rgba(14,42,71,.06);
+    border:1px solid var(--line);
+  }
+  .nav-link{ position:relative; }
+  .nav-link.active::after{
+    content:""; position:absolute; left:15px; right:15px; bottom:1px; height:2.5px; border-radius:2px;
+    background:var(--grad-accent); box-shadow:0 0 8px rgba(91,61,240,.5);
+  }
+  .nav-left{display:flex; align-items:center; gap:16px; min-width:0;}
+  /* Brand block must never be flex-shrunk: without this the logo chip
+     collapsed to 0 width (and the title wrapped to 3 lines) whenever the
+     nav row got tight. */
+  .brand-cluster-web{display:flex; align-items:center; gap:10px; flex:0 0 auto;}
+  .brand-chip-web{
+    background:var(--bg); border-radius:12px; padding:6px 10px; height:44px; display:flex; align-items:center;
+    box-shadow:inset 0 0 0 1px var(--line); flex:0 0 auto;
+  }
+  .brand-chip-web img{height:30px; width:auto; object-fit:contain; display:block; flex:0 0 auto;}
+  .coa-chip-web{
+    width:36px; height:36px; border-radius:50%; background:var(--bg); display:flex; align-items:center; justify-content:center;
+    padding:5px; box-shadow:inset 0 0 0 1px var(--line); flex:0 0 auto;
+    margin-left:6px;
+  }
+  .coa-chip-web img{width:100%; height:100%; object-fit:contain;}
+  .nav-title{color:var(--ink); font-family:'Poppins'; font-weight:700; font-size:14.5px; line-height:1.25; flex:0 0 auto; white-space:nowrap;}
+  .nav-title span{display:block; font-family:'Inter'; font-weight:500; font-size:9.5px; color:var(--muted); margin-top:1px; white-space:normal;}
+
+  .nav-links{display:flex; gap:4px; margin-left:20px;}
+  .nav-link{
+    color:var(--muted); font-size:13px; font-weight:600; padding:10px 15px; border-radius:10px; cursor:pointer;
+    transition:background .15s ease, color .15s ease; white-space:nowrap;
+  }
+  .nav-link:hover{background:var(--bg); color:var(--ink);}
+  .nav-link.active{color:var(--accent);}
+
+  .nav-right{display:flex; align-items:center; gap:8px;}
+  .nav-icon-btn{
+    width:38px; height:38px; border-radius:50%; background:var(--bg); border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--ink-soft); position:relative; flex:0 0 auto;
+    transition:background .15s ease;
+  }
+  .nav-icon-btn:hover{background:var(--line);}
+  .nav-icon-btn i{font-size:16px; line-height:1;}
+  .nav-badge-count{
+    position:absolute; top:-5px; right:-5px; min-width:16px; height:16px; padding:0 3px; border-radius:999px;
+    background:var(--grad-accent); color:#fff; font-size:9.5px; font-weight:800; line-height:16px; text-align:center;
+    box-shadow:0 2px 6px rgba(91,61,240,.5);
+  }
+  .nav-lang-btn{
+    display:flex; align-items:center; gap:5px; height:38px; padding:0 12px; border-radius:999px;
+    background:var(--bg); border:1px solid var(--line); color:var(--ink-soft); cursor:pointer; flex:0 0 auto;
+    font-size:12px; font-weight:700; transition:background .15s ease;
+  }
+  .nav-lang-btn:hover{background:var(--line);}
+  .nav-lang-btn i{font-size:15px;}
+  .nav-lang-btn .nav-lang-chev{font-size:9px; opacity:.6;}
+
+  .nav-hamburger{display:none; width:38px; height:38px; border-radius:10px; background:var(--bg); border:1px solid var(--line); align-items:center; justify-content:center; cursor:pointer; color:var(--ink-soft); font-size:19px;}
+  .nav-mobile-panel{
+    display:none; position:fixed; top:98px; left:20px; right:20px; background:var(--card); z-index:199;
+    padding:10px 20px 18px; box-shadow:0 18px 40px rgba(14,42,71,.2); border-radius:18px; border:1px solid var(--line);
+    flex-direction:column; gap:4px;
+  }
+  .nav-mobile-panel.show{display:flex;}
+  .nav-mobile-panel .nav-link{color:var(--muted); padding:12px 14px;}
+  .nav-mobile-panel .nav-link.active{background:var(--bg); color:var(--accent);}
+
+  /* Collapse to the hamburger a little earlier (was 940px): the full
+     desktop nav started to crowd the brand well before 940, so switch
+     over while there is still comfortable breathing room. */
+  @media (max-width:1080px){
+    .nav-links{display:none;}
+    .nav-hamburger{display:flex;}
+  }
+  @media (max-width:560px){
+    .nav-title span{display:none;}
+    .navbar{margin:10px 12px 0; padding:0 14px;}
+  }
+  /* ============ PAGES ============ */
+  .page{display:none;}
+  .page.active{display:block; animation:pageIn .3s ease;}
+  @keyframes pageIn{ from{opacity:0; transform:translateY(12px) scale(.985); filter:blur(4px);} to{opacity:1; transform:translateY(0) scale(1); filter:blur(0);} }
+
+  .page-wrap{max-width:1180px; margin:0 auto; padding:44px 32px 90px;}
+  .page-head{margin-bottom:28px; max-width:640px;}
+  .page-head h2{font-size:26px; font-weight:700; color:var(--ink); letter-spacing:-.3px;}
+  .page-head p{font-size:13.5px; color:var(--muted); margin-top:8px; line-height:1.6;}
+
+  .section-title{
+    font-family:'Poppins'; font-weight:700; font-size:15px; color:var(--ink);
+    margin:36px 0 4px; padding-left:12px; position:relative;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .section-title::before{content:""; position:absolute; left:0; top:2px; bottom:2px; width:4px; border-radius:4px; background:var(--grad-gold);}
+  .section-title span.link{font-family:'Inter'; font-weight:600; font-size:12px; color:var(--ink-soft); cursor:pointer;}

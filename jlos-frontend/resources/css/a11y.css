@@ -1,0 +1,130 @@
+/* ============================================================
+   Accessibility — visible keyboard focus, native-button reset,
+   reduced-motion, skip link, and screen-reader utilities.
+
+   This file is imported LAST (see app.css) so its focus styles
+   layer cleanly on top of every component without changing the
+   resting visual design. Nothing here alters how the portal looks
+   at rest — it only adds behaviour for keyboard & assistive-tech
+   users, and respects the OS "reduce motion" preference.
+   ============================================================ */
+
+/* ---- Native colour scheme so form controls, scrollbars and the
+   caret match the active theme in both light and dark mode. ---- */
+:root { color-scheme: light; }
+body.theme-dark { color-scheme: dark; }
+
+/* ============ BUTTON RESET ============
+   Many interactive controls are now real <button> elements reusing
+   the existing component classes. This element-level reset (specificity
+   0-0-1) strips the user-agent chrome so those classes — which all set
+   their own background / border / padding — win the cascade and render
+   exactly as before, while gaining free keyboard + semantics. */
+button {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  background-color: transparent;
+  background-image: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  text-align: inherit;
+  line-height: inherit;
+  -webkit-appearance: none;
+  appearance: none;
+  cursor: pointer;
+}
+button:disabled { cursor: default; }
+
+/* ============ VISIBLE KEYBOARD FOCUS ============
+   :focus-visible only paints the ring for keyboard/AT navigation, so
+   mouse users never see an outline. Uses the theme accent, which flips
+   in dark mode. `offset` keeps the ring clear of rounded corners. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[role="button"]:focus-visible,
+[role="switch"]:focus-visible,
+[role="radio"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Text inputs already carry their own radius — keep the ring hugging it
+   and add a soft halo for extra visibility. */
+.hero-search-card input:focus-visible,
+.chat-panel-input input:focus-visible,
+.help-input-row-web input:focus-visible,
+.inst-search-web input:focus-visible {
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(91, 61, 240, .16);
+}
+
+/* Some controls are dark chips on a dark surface (nav-bg, chat send);
+   widen the offset so the ring reads against them. */
+.floating-assistant:focus-visible,
+.send-btn:focus-visible,
+.hero-find-btn:focus-visible { outline-offset: 3px; }
+
+/* Remove the legacy non-visible outline flash on click for these. */
+button:focus:not(:focus-visible),
+[role="button"]:focus:not(:focus-visible) { outline: none; }
+
+/* ============ SKIP LINK ============ */
+.skip-link {
+  position: fixed;
+  top: 10px;
+  left: 20px;
+  z-index: 500;
+  transform: translateY(-160%);
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 11px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: 'Poppins', sans-serif;
+  box-shadow: var(--shadow-md);
+  transition: transform .18s ease;
+}
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ============ SCREEN-READER-ONLY TEXT ============
+   Visually hidden but available to assistive tech (e.g. accessible
+   names for icon-only buttons, live-region status text). */
+.sr-only {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ============ REDUCED MOTION ============
+   Honour the OS "reduce motion" setting: neutralise the shimmer,
+   pulse, page-transition, tilt and toast animations that would
+   otherwise trigger vestibular discomfort. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  html { scroll-behavior: auto !important; }
+  .page.active { animation: none !important; }
+}

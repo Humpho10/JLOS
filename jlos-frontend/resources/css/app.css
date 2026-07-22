@@ -1,0 +1,15 @@
+/* ============================================================
+   JLOS Justice Portal — External Portal
+   Stylesheet entry point (bundled by Vite).
+
+   Import order matters: base variables/resets first, then layout
+   shell, then the hero, shared components, and finally page-specific
+   rules (so later, more specific selectors can safely override).
+   ============================================================ */
+
+@import './base.css';
+@import './layout.css';
+@import './hero.css';
+@import './components.css';
+@import './pages.css';
+@import './a11y.css';
