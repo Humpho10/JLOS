@@ -27,6 +27,16 @@ class ScrapeInstitution extends Command
             'directorate' => '/directorate/',
             'message' => '/message-from-director/',
         ],
+        'uhrc' => [
+            'about' => '/page/our-mandate',
+            'leadership' => '/team',
+            'directorate' => '/page/directorates',
+            'contact' => '/page/contact-us',
+            'service' => '/page/complaint-form',
+            'publications' => '/publications',
+            'reports' => '/reports',
+            'tribunal' => '/page/about-tribunal',
+        ],
     ];
 
     public function handle(): int

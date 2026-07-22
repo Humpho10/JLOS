@@ -94,7 +94,7 @@ export default function ChatPage({ active }) {
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2"><path d="M21 11.5a8.4 8.4 0 0 1-1 4 8.5 8.5 0 0 1-7.5 4.5A8.4 8.4 0 0 1 8 19l-5 1 1-5a8.4 8.4 0 0 1-1-4A8.5 8.5 0 0 1 12.5 3 8.5 8.5 0 0 1 21 11.5z" /></svg>
             </div>
             <div>
-              <h3>Justice AI Assistant{chat.dppInstitution ? ` · ${chat.dppInstitution.name}` : ''}</h3>
+              <h3>Justice AI Assistant</h3>
               <p id="chatStatusWeb" role="status" aria-live="polite">{chat.chatStatus}</p>
             </div>
           </div>

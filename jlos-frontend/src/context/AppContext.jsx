@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { translations } from '../i18n/translations.js';
-import { fetchInstitutions, sendInstitutionMessage, ApiError } from '../lib/api.js';
+import { fetchInstitutions, sendMessage, ApiError } from '../lib/api.js';
 
 // ============================================================
 // Central app state — navigation, theme, modals, toasts,
@@ -10,9 +10,10 @@ import { fetchInstitutions, sendInstitutionMessage, ApiError } from '../lib/api.
 // startChat/findService) one-for-one, just as React state
 // instead of direct DOM manipulation.
 //
-// The chat itself talks to the jlos-chatbot Laravel API for the
-// DPP institution — the only one wired up with real scraped/
-// embedded content in this prototype.
+// The chat itself talks to the jlos-chatbot Laravel API's
+// institution-agnostic /api/chat endpoint, which searches across
+// every institution's scraped/embedded content and answers based
+// on whichever one the question is actually about.
 // ============================================================
 
 const AppContext = createContext(null);
@@ -23,15 +24,13 @@ export function useApp() {
   return ctx;
 }
 
-const CHAT_INSTITUTION_SLUG = 'dpp';
-
 let uid = 0;
 const nextId = () => `m${++uid}`;
 
 function initialMessages() {
   return [
-    { id: nextId(), kind: 'system', text: 'Chat started · English · Connected to the DPP assistant' },
-    { id: nextId(), kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: "Hello! I'm the DPP assistant — ask me anything about the Office of the Director of Public Prosecutions." },
+    { id: nextId(), kind: 'system', text: 'Chat started · English · Connected to Justice AI' },
+    { id: nextId(), kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: "Hello! I'm Justice AI — ask me anything about JLOS institutions like the DPP or the Uganda Human Rights Commission." },
   ];
 }
 
@@ -100,19 +99,15 @@ export function AppProvider({ children }) {
 
   // ---------- chat ----------
   const [messages, setMessages] = useState(initialMessages);
-  const [chatStatus, setChatStatus] = useState('● Connecting to DPP assistant...');
+  const [chatStatus, setChatStatus] = useState('● Connecting to Justice AI...');
   const [chatInput, setChatInput] = useState('');
-  const [dppInstitution, setDppInstitution] = useState(null);
 
-  // On load, confirm the backend is reachable and grab the DPP
-  // institution's display name/base URL for the chat header.
+  // On load, just confirm the backend is reachable.
   useEffect(() => {
     let cancelled = false;
     fetchInstitutions()
-      .then((list) => {
+      .then(() => {
         if (cancelled) return;
-        const dpp = list.find((inst) => inst.slug === CHAT_INSTITUTION_SLUG);
-        setDppInstitution(dpp || null);
         setChatStatus('● Online — usually replies instantly');
       })
       .catch(() => {
@@ -144,7 +139,7 @@ export function AppProvider({ children }) {
     setChatStatus('● Justice AI is typing...');
     addTyping();
 
-    sendInstitutionMessage(CHAT_INSTITUTION_SLUG, text)
+    sendMessage(text)
       .then((reply) => {
         removeTyping();
         addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: reply });
@@ -190,7 +185,7 @@ export function AppProvider({ children }) {
     toasts, pushToast,
     language, setLanguage, t,
     chat: {
-      messages, chatStatus, chatInput, setChatInput, dppInstitution,
+      messages, chatStatus, chatInput, setChatInput,
       runChatDemo, handleFileAttach, startChat, findService,
     },
   };

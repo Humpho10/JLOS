@@ -16,5 +16,13 @@ class InstitutionSeeder extends Seeder
                 'base_url' => 'https://dpp.go.ug',
             ]
         );
+
+        Institution::updateOrCreate(
+            ['slug' => 'uhrc'],
+            [
+                'name' => 'Uganda Human Rights Commission',
+                'base_url' => 'https://uhrc.ug',
+            ]
+        );
     }
 }
