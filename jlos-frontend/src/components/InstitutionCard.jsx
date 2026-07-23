@@ -1,20 +1,27 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import TiltCard from './TiltCard.jsx';
 import InstitutionIcon from '../utils/InstitutionIcon.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { activate } from '../utils/a11y.js';
 
-export default function InstitutionCard({ inst }) {
-  const { goToPage, pushToast } = useApp();
-  const [open, setOpen] = useState(false);
+export default function InstitutionCard({ inst, autoOpen = false }) {
+  const { goToInstitutionContact } = useApp();
+  const [open, setOpen] = useState(autoOpen);
   const [logoFailed, setLogoFailed] = useState(false);
 
   const hasLogo = inst.logo && !logoFailed;
   const servicesId = `${inst.code}-services`;
   const toggle = () => setOpen((v) => !v);
 
+  // All pages stay mounted, so re-focusing this same card from elsewhere
+  // (e.g. tapping it again on the home page) needs to re-open it even if
+  // the user had since collapsed it, not just on first mount.
+  useEffect(() => {
+    if (autoOpen) setOpen(true);
+  }, [autoOpen]);
+
   return (
-    <TiltCard className={`inst-card ${open ? 'open' : ''}`} maxTilt={5}>
+    <TiltCard id={`inst-${inst.code}`} className={`inst-card ${open ? 'open' : ''}`} maxTilt={5}>
       <div
         className="ic-top"
         role="button"
@@ -50,18 +57,18 @@ export default function InstitutionCard({ inst }) {
             type="button"
             className="mc-btn primary"
             style={{ flex: 1, padding: '10px 0' }}
-            onClick={(e) => { e.stopPropagation(); goToPage('page-chat'); }}
+            onClick={(e) => { e.stopPropagation(); goToInstitutionContact(inst); }}
           >
             Chat now
           </button>
-          <button
-            type="button"
+          <a
+            href={`tel:${inst.phone.replace(/\s+/g, '')}`}
             className="mc-btn ghost"
-            style={{ flex: 1, padding: '10px 0' }}
-            onClick={(e) => { e.stopPropagation(); pushToast(`Calling ${inst.name} front desk...`); }}
+            style={{ flex: 1, padding: '10px 0', textAlign: 'center' }}
+            onClick={(e) => e.stopPropagation()}
           >
             Call
-          </button>
+          </a>
         </div>
       </div>
     </TiltCard>

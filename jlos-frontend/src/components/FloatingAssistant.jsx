@@ -2,15 +2,16 @@ import React from 'react';
 import { useApp } from '../context/AppContext.jsx';
 
 // ============================================================
-// Small, persistent Justice AI bubble — fixed bottom-right on
-// every page except the chat page itself (no point offering to
-// open chat while you're already in it).
+// Small, persistent Justice AI bubble — fixed bottom-right on every
+// page except the chat and institution-contact pages, which already
+// have their own chat interface (no point offering to open one while
+// you're already in one).
 // ============================================================
 
 export default function FloatingAssistant() {
   const { activePage, goToPage } = useApp();
 
-  if (activePage === 'page-chat') return null;
+  if (activePage === 'page-chat' || activePage === 'page-contact') return null;
 
   return (
     <button

@@ -7,25 +7,27 @@ import ToastHost from './components/ToastHost.jsx';
 import HomePage from './pages/HomePage.jsx';
 import ChatPage from './pages/ChatPage.jsx';
 import InstitutionsPage from './pages/InstitutionsPage.jsx';
-import TrackPage from './pages/TrackPage.jsx';
+import InstitutionContactPage from './pages/InstitutionContactPage.jsx';
 import MorePage from './pages/MorePage.jsx';
 import NotifModal from './components/modals/NotifModal.jsx';
 import LangModal from './components/modals/LangModal.jsx';
-import UssdModal from './components/modals/UssdModal.jsx';
 import AccessModal from './components/modals/AccessModal.jsx';
 import FaqModal from './components/modals/FaqModal.jsx';
 import SupportModal from './components/modals/SupportModal.jsx';
-import BookModal from './components/modals/BookModal.jsx';
-import EmergencyModal from './components/modals/EmergencyModal.jsx';
 import ServicesModal from './components/modals/ServicesModal.jsx';
 
 const PAGES = {
   'page-home': HomePage,
   'page-chat': ChatPage,
   'page-institutions': InstitutionsPage,
-  'page-track': TrackPage,
+  'page-contact': InstitutionContactPage,
   'page-more': MorePage,
 };
+
+// These pages lock their own height to the viewport below the navbar
+// (see .chat-page-wrap) instead of scrolling as part of the page, so the
+// site-wide footer shouldn't render underneath them.
+const VIEWPORT_LOCKED_PAGES = new Set(['page-chat', 'page-contact']);
 
 const LANG_TAGS = { English: 'en', Luganda: 'lg', Kiswahili: 'sw', Ateso: 'teo' };
 
@@ -66,7 +68,7 @@ function Shell() {
         ))}
       </main>
 
-      {activePage !== 'page-chat' && <Footer />}
+      {!VIEWPORT_LOCKED_PAGES.has(activePage) && <Footer />}
 
       <FloatingAssistant />
 
@@ -74,12 +76,9 @@ function Shell() {
 
       <NotifModal />
       <LangModal />
-      <UssdModal />
       <AccessModal />
       <FaqModal />
       <SupportModal />
-      <BookModal />
-      <EmergencyModal />
       <ServicesModal />
     </>
   );
