@@ -64,14 +64,6 @@ export default function Footer() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M21 10c0 6-9 12-9 12S3 16 3 10a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
                 JLOS Towers, Plot 98–102 Katalima Road, Naguru, Kampala
               </li>
-              <li>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8" /></svg>
-                Dial *256*5567# (USSD, no data needed)
-              </li>
-              <li className="footer-emergency" {...pressable(() => openModal('emergencyModal'), { 'aria-haspopup': 'dialog' })}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9L2.6 18a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z" /></svg>
-                {t('footer.emergency')}
-              </li>
             </ul>
           </div>
         </div>
