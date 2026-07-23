@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { translations } from '../i18n/translations.js';
-import { fetchInstitutions, sendMessage, ApiError } from '../lib/api.js';
+import { fetchInstitutions, sendMessage, sendMessageWithAttachment, ApiError } from '../lib/api.js';
+import { enrichInstitution } from '../data/institutionMeta.js';
 
 // ============================================================
 // Central app state — navigation, theme, modals, toasts,
@@ -49,9 +50,26 @@ export function AppProvider({ children }) {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // ---------- theme ----------
+  // ---------- theme & display ----------
   const [isDark, setIsDark] = useState(false);
   const toggleTheme = useCallback(() => setIsDark((d) => !d), []);
+  const [largeText, setLargeText] = useState(false);
+  const toggleLargeText = useCallback(() => setLargeText((v) => !v), []);
+  const [highContrast, setHighContrast] = useState(false);
+  const toggleHighContrast = useCallback(() => setHighContrast((v) => !v), []);
+
+  useEffect(() => {
+    document.body.classList.toggle('text-lg', largeText);
+  }, [largeText]);
+  useEffect(() => {
+    document.body.classList.toggle('contrast-high', highContrast);
+  }, [highContrast]);
+
+  // ---------- institutions ----------
+  // The only institutions ever shown as interactive (chat/services) are
+  // ones the backend actually has scraped content for — fetched live so
+  // this list stays accurate as more institutions get added server-side.
+  const [liveInstitutions, setLiveInstitutions] = useState([]);
 
   // ---------- modals ----------
   const [openModalIds, setOpenModalIds] = useState(() => new Set());
@@ -102,12 +120,14 @@ export function AppProvider({ children }) {
   const [chatStatus, setChatStatus] = useState('● Connecting to Justice AI...');
   const [chatInput, setChatInput] = useState('');
 
-  // On load, just confirm the backend is reachable.
+  // On load, confirm the backend is reachable and load the real
+  // institution list (this doubles as the reachability check).
   useEffect(() => {
     let cancelled = false;
     fetchInstitutions()
-      .then(() => {
+      .then((list) => {
         if (cancelled) return;
+        setLiveInstitutions(list.map(enrichInstitution));
         setChatStatus('● Online — usually replies instantly');
       })
       .catch(() => {
@@ -155,15 +175,37 @@ export function AppProvider({ children }) {
 
   const handleFileAttach = useCallback((file) => {
     if (!file) return;
+
     const isImage = file.type && file.type.startsWith('image/');
+    const isPdf = file.type === 'application/pdf';
+    if (!isImage && !isPdf) {
+      pushToast("Justice AI can read images and PDFs — that file type isn't supported yet.");
+      return;
+    }
+
     const sizeLabel = formatSize(file.size);
     const url = isImage ? URL.createObjectURL(file) : null;
     addMessage({ kind: 'file-msg', isImage, url, name: file.name, sizeLabel });
-    addMessage({
-      kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️',
-      text: "Thanks for sharing that — this prototype doesn't read attached files yet, so please describe what's in it and I'll help from there.",
-    });
-  }, [addMessage]);
+
+    const caption = chatInput.trim();
+    setChatInput('');
+    if (caption) addMessage({ kind: 'user', text: caption });
+    setChatStatus('● Justice AI is reading the attachment...');
+    addTyping();
+
+    sendMessageWithAttachment(caption, file)
+      .then((reply) => {
+        removeTyping();
+        addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: reply });
+        setChatStatus('● Online — usually replies instantly');
+      })
+      .catch((err) => {
+        removeTyping();
+        const errText = err instanceof ApiError ? err.message : 'Something went wrong. Please try again.';
+        addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: errText });
+        setChatStatus('● Online — usually replies instantly');
+      });
+  }, [chatInput, addMessage, addTyping, removeTyping, pushToast]);
 
   const startChat = useCallback((text) => {
     goToPage('page-chat');
@@ -181,6 +223,9 @@ export function AppProvider({ children }) {
   const value = {
     activePage, goToPage,
     isDark, toggleTheme,
+    largeText, toggleLargeText,
+    highContrast, toggleHighContrast,
+    liveInstitutions,
     openModal, closeModal, closeAllModals, isModalOpen,
     toasts, pushToast,
     language, setLanguage, t,

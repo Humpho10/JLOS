@@ -24,5 +24,13 @@ class InstitutionSeeder extends Seeder
                 'base_url' => 'https://uhrc.ug',
             ]
         );
+
+        Institution::updateOrCreate(
+            ['slug' => 'judiciary'],
+            [
+                'name' => 'The Judiciary of Uganda',
+                'base_url' => 'https://judiciary.go.ug',
+            ]
+        );
     }
 }

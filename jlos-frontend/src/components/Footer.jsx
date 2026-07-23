@@ -1,11 +1,10 @@
 import React from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { NAV_ITEMS } from '../data/navItems.js';
-import { institutions } from '../data/institutions.js';
 import { pressable } from '../utils/a11y.js';
 
 export default function Footer() {
-  const { goToPage, openModal, t } = useApp();
+  const { goToPage, openModal, t, liveInstitutions } = useApp();
   const year = new Date().getFullYear();
 
   return (
@@ -45,11 +44,12 @@ export default function Footer() {
           <div className="footer-col">
             <h4>{t('footer.institutions')}</h4>
             <ul>
-              {institutions.map((inst) => (
-                <li key={inst.code}>
+              {liveInstitutions.map((inst) => (
+                <li key={inst.slug}>
                   <span {...pressable(() => goToPage('page-institutions'))}>{inst.code} — {inst.sub}</span>
                 </li>
               ))}
+              <li><span {...pressable(() => goToPage('page-institutions'))}>More joining soon</span></li>
             </ul>
           </div>
 

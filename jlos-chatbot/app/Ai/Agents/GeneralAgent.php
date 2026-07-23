@@ -2,61 +2,68 @@
 
 namespace App\Ai\Agents;
 
-use App\Models\DocumentChunk;
+use App\Ai\Agents\Concerns\RetrievesContext;
 use Laravel\Ai\Contracts\Agent;
-use Laravel\Ai\Contracts\HasTools;
-use Laravel\Ai\Embeddings;
 use Laravel\Ai\Promptable;
-use Laravel\Ai\Tools\SimilaritySearch;
+use Laravel\Ai\Responses\AgentResponse;
 
-class GeneralAgent implements Agent, HasTools
+class GeneralAgent implements Agent
 {
     use Promptable;
-
-    public function maxSteps(): int
-    {
-        return 4;
-    }
+    use RetrievesContext;
 
     public function instructions(): string
     {
         return "You are an informational assistant for Uganda's Justice Law and Order Sector (JLOS), covering "
             . "multiple institutions (e.g. the Directorate of Public Prosecutions, the Uganda Human Rights "
-            . "Commission, and others). When a user asks a question, use the content search tool to find relevant "
-            . "passages scraped from the institutions' official websites, then answer using only what the tool "
-            . "returns. The tool tells you which institution each passage came from — make that clear in your "
-            . "answer when it isn't obvious from context. When referencing a source, mention it naturally in "
-            . "your own words and include its URL directly in the sentence (for example: \"as described on the "
-            . "ODPP Complaint page, https://dpp.go.ug/complaint/\"). Do not use footnote markers, brackets, or "
-            . "citation symbols. If the tool doesn't return anything relevant, say clearly that you don't have "
-            . "that information and suggest checking the relevant institution's official website directly. Do "
-            . "not invent procedures, contact details, or legal information that isn't in the retrieved content. "
-            . "This is informational only, not legal advice.";
+            . "Commission, and others). Answer the user's question using only the context passages provided "
+            . "below the question — they were retrieved from the institutions' official websites, and each is "
+            . "labeled with which institution it came from. Make the relevant institution clear in your answer "
+            . "when it isn't obvious from context. When referencing a source, mention it naturally in your own "
+            . "words and include its URL directly in the sentence (for example: \"as described on the ODPP "
+            . "Complaint page, https://dpp.go.ug/complaint/\"). Do not use footnote markers, brackets, citation "
+            . "symbols, or markdown syntax (no asterisks, no #-style headings) — write in plain prose paragraphs, "
+            . "using a new paragraph or a simple dash for each list item instead of markdown bullets. If the user "
+            . "attaches an image or document, examine it directly and describe or answer based on what it "
+            . "actually shows (e.g. a form, ID, or complaint letter), combining that with the context passages "
+            . "where relevant. If the context doesn't contain anything relevant, say clearly that you don't "
+            . "have that information and suggest checking the relevant institution's official website directly. "
+            . "Do not invent procedures, contact details, or legal information that isn't in the retrieved "
+            . "content. This is informational only, not legal advice.";
     }
 
-    public function tools(): iterable
+    public function respond(string $question, ?string $provider = null, array $attachments = []): AgentResponse
     {
-        return [
-            (new SimilaritySearch(
-                using: function (string $query) {
-                    $queryVector = Embeddings::for([$query])
-                        ->dimensions(768)
-                        ->generate()
-                        ->embeddings[0];
+        $chunks = $this->retrieveChunks($question);
 
-                    return DocumentChunk::query()
-                        ->whereVectorSimilarTo('embedding', $queryVector, minSimilarity: 0.45)
-                        ->with(['scrapedPage:id,url,title', 'institution:id,name'])
-                        ->limit(6)
-                        ->get()
-                        ->map(fn (DocumentChunk $chunk) => [
-                            'institution' => $chunk->institution->name,
-                            'text' => $chunk->chunk_text,
-                            'source_title' => $chunk->scrapedPage->title,
-                            'source_url' => $chunk->scrapedPage->url,
-                        ]);
-                }
-            ))->withDescription('Search official JLOS institution website content (across all institutions) for relevant passages.'),
-        ];
+        $augmented = "Context passages:\n\n".$this->formatContext($chunks)."\n\nQuestion: {$question}";
+
+        // Vision/document analysis genuinely takes longer than a text-only
+        // reply, so give attachments more room before we give up and fail
+        // over — the 20s default (see timeout()) is for text-only requests.
+        $timeout = $attachments === [] ? null : 45;
+
+        // Groq's configured model can't accept image/document content at all
+        // (it requires plain-string message content), so failing over to it
+        // for an attachment request is guaranteed to fail anyway — stick to
+        // Gemini alone rather than surface that confusing error.
+        $resolvedProvider = $attachments === [] ? $provider : 'gemini';
+
+        return $this->prompt($augmented, attachments: $attachments, provider: $resolvedProvider, timeout: $timeout);
+    }
+
+    // Fail over to Groq if Gemini is rate-limited or overloaded, so a single
+    // provider having a bad moment doesn't take the chatbot down mid-demo.
+    public function provider(): array
+    {
+        return ['gemini', 'groq'];
+    }
+
+    // A connection hang (Gemini not responding at all) should fail fast
+    // rather than tie up the request for a minute before the controller
+    // even gets a chance to retry against Groq.
+    public function timeout(): int
+    {
+        return 20;
     }
 }

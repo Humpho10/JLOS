@@ -8,17 +8,17 @@ export default function NotifModal() {
 
   return (
     <ModalShell id="notifModal" title="Notifications">
+      <button type="button" className="notif-item" onClick={() => go('page-chat')}>
+        <div className="notif-dot" aria-hidden="true"></div>
+        <div><b>The Judiciary is now covered by Justice AI</b><span>Ask about courts, appeals & filing guidance · new</span></div>
+      </button>
       <button type="button" className="notif-item" onClick={() => go('page-track')}>
         <div className="notif-dot" aria-hidden="true"></div>
-        <div><b>Ticket #JLOS-2931 updated</b><span>ODPP replied to your case perusal request · 2h ago</span></div>
-      </button>
-      <button type="button" className="notif-item" onClick={() => go('page-institutions')}>
-        <div className="notif-dot" aria-hidden="true"></div>
-        <div><b>TAT hearings now bookable online</b><span>Tax Appeals Tribunal added a new service · 1d ago</span></div>
+        <div><b>Sample: Ticket #JLOS-2931 updated</b><span>Illustrative ticket — live tracking coming soon</span></div>
       </button>
       <button type="button" className="notif-item" onClick={() => closeModal('notifModal')}>
         <div className="notif-dot" style={{ background: 'var(--line)' }} aria-hidden="true"></div>
-        <div><b>Welcome to the JLOS Justice Portal</b><span>One entry point to all 8 JLOS institutions · 3d ago</span></div>
+        <div><b>Welcome to the JLOS Justice Portal</b><span>One entry point across JLOS institutions · 3d ago</span></div>
       </button>
     </ModalShell>
   );

@@ -3,43 +3,33 @@
 namespace App\Http\Controllers;
 
 use App\Ai\Agents\GeneralAgent;
+use App\Http\Controllers\Concerns\ChatsWithFailover;
 use Illuminate\Http\Request;
-use Laravel\Ai\Exceptions\ProviderOverloadedException;
-use Laravel\Ai\Exceptions\RateLimitedException;
-use Throwable;
 
 class ChatController extends Controller
 {
+    use ChatsWithFailover;
+
     public function chat(Request $request)
     {
         $request->validate([
-            'message' => 'required|string|max:500',
+            'message' => 'nullable|string|max:500',
+            'attachment' => 'nullable|file|mimes:jpg,jpeg,png,webp,pdf|max:8192',
         ]);
 
-        try {
-            $response = (new GeneralAgent)->prompt($request->input('message'));
-        } catch (RateLimitedException $e) {
+        if (! $request->filled('message') && ! $request->hasFile('attachment')) {
             return response()->json([
-                'message' => $request->input('message'),
-                'reply' => "I'm getting rate limited by the AI provider right now. Please wait a bit and try again.",
-            ], 429);
-        } catch (ProviderOverloadedException $e) {
-            return response()->json([
-                'message' => $request->input('message'),
-                'reply' => "The AI provider is temporarily overloaded. Please try again in a moment.",
-            ], 503);
-        } catch (Throwable $e) {
-            report($e);
-
-            return response()->json([
-                'message' => $request->input('message'),
-                'reply' => 'Something went wrong. Please try again.',
-            ], 500);
+                'message' => '',
+                'reply' => 'Please type a message or attach a file.',
+            ], 422);
         }
 
-        return response()->json([
-            'message' => $request->input('message'),
-            'reply' => $response->text ?: "I couldn't find relevant information for that — try rephrasing your question.",
-        ]);
+        $message = $request->input('message') ?: 'Please review the attached file and tell me what it is and how it relates to a JLOS institution.';
+        $attachments = $request->hasFile('attachment') ? [$request->file('attachment')] : [];
+
+        return $this->respondWithFailover(
+            fn (?string $provider) => (new GeneralAgent)->respond($message, $provider, $attachments),
+            $message,
+        );
     }
 }

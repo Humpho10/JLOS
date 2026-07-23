@@ -68,6 +68,21 @@
   body.theme-dark .modal-overlay-web{background:rgba(0,0,0,.65);}
   body.theme-dark .navbar{box-shadow:0 4px 20px rgba(0,0,0,.4);}
 
+  /* ============ ACCESSIBILITY: large text / high contrast ============ */
+  body.text-lg{font-size:114%;}
+  body.contrast-high{
+    --bg:#FFFFFF; --card:#FFFFFF; --text:#000000; --muted:#333333; --line:#000000;
+    --ink:#000000; --ink-soft:#000000;
+  }
+  body.theme-dark.contrast-high{
+    --bg:#000000; --card:#000000; --text:#FFFFFF; --muted:#D8D8D8; --line:#FFFFFF;
+    --ink:#FFFFFF; --ink-soft:#FFFFFF;
+  }
+  body.contrast-high .msg.user{background:#000000; color:#FFFFFF;}
+  body.contrast-high .send-btn, body.contrast-high .chat-panel-head{background:#000000;}
+  body.theme-dark.contrast-high .msg.user{background:#FFFFFF; color:#000000;}
+  body.theme-dark.contrast-high .send-btn, body.theme-dark.contrast-high .chat-panel-head{background:#FFFFFF; color:#000000;}
+
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   html,body{margin:0;padding:0;}

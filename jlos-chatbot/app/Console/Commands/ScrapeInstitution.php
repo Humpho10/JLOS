@@ -26,7 +26,8 @@ class ScrapeInstitution extends Command
             'leadership' => '/top-management/',
             'directorate' => '/directorate/',
             'message' => '/message-from-director/',
-        ],
+            'news' => '/news/',
+        ], //hardcoded targetted array for the pages you want to scrap
         'uhrc' => [
             'about' => '/page/our-mandate',
             'leadership' => '/team',
@@ -36,6 +37,26 @@ class ScrapeInstitution extends Command
             'publications' => '/publications',
             'reports' => '/reports',
             'tribunal' => '/page/about-tribunal',
+            'administrative_structure' => '/page/administrative-structure',
+            'tribunal_decisions' => '/page/tribunal-decisions',
+            'cause_list' => '/page/cause-list',
+            'newsletters' => '/page/magazines-newsletters',
+            'bills' => '/bills',
+            'news' => '/news',
+            'press' => '/press',
+            'constitution' => '/reports/constitution-uganda-1995',
+        ],
+        'judiciary' => [
+            'about' => '/data/smenu/86/1/About%20the%20Judiciary.html',
+            'administrative_structure' => '/data/smenu/90/1/Administrative%20Structure.html',
+            'judicial_structure' => '/data/smenu/93/Judicial%20Structure.html',
+            'finance_administration' => '/data/smenu/94/Finance%20and%20Administration.html',
+            'supreme_court' => '/data/smenu/7/1/Supreme%20Court.html',
+            'high_court' => '/data/smenu/9/3/High%20Court.html',
+            'court_of_appeal' => '/data/smenu/77/3/Court%20of%20Appeal.html',
+            'chief_magistrate_courts' => '/data/smenu/21/4/Chief%20Magistrate%20Courts.html',
+            'other_courts' => '/data/smenu/11/5/Other%20Courts.html',
+            'service' => '/data/smenu/117/1/Inspectorate%20of%20Courts.html',
         ],
     ];
 
@@ -68,7 +89,8 @@ class ScrapeInstitution extends Command
                 $this->warn("  Failed ({$response->status()}), skipping.");
                 continue;
             }
-
+          //for each url you fetch, parse the html using DomCrawler, it strps the <script>,<style>,<nav>,<header>,<footer>
+          //and it focuses on the main if it exists
             $crawler = new Crawler($response->body());
 
             $title = $crawler->filter('title')->count()
@@ -80,9 +102,15 @@ class ScrapeInstitution extends Command
                 $node->parentNode?->removeChild($node);
             }
 
-            $contentNode = $crawler->filter('main')->count() > 0
-                ? $crawler->filter('main')
-                : $crawler->filter('body');
+            // Prefer a real <main>; some older sites (e.g. Judiciary) have no
+            // <main> and instead wrap the article in a #left_section, with a
+            // sidebar of unrelated quick-links living in a sibling element —
+            // falling straight back to <body> would pull that sidebar in too.
+            $contentNode = match (true) {
+                $crawler->filter('main')->count() > 0 => $crawler->filter('main'),
+                $crawler->filter('#left_section')->count() > 0 => $crawler->filter('#left_section'),
+                default => $crawler->filter('body'),
+            };
 
             $rawText = $contentNode->count() > 0 ? $contentNode->text('') : '';
             $cleanedText = trim(preg_replace('/\s+/', ' ', $rawText));

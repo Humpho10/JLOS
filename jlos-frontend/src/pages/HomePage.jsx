@@ -1,15 +1,16 @@
 import React, { useState } from 'react';
 import TiltCard from '../components/TiltCard.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { institutions } from '../data/institutions.js';
 import { useVoiceInput } from '../hooks/useVoiceInput.js';
 import InstitutionIcon from '../utils/InstitutionIcon.jsx';
 
-const HERO_STATS = [
-  { key: 'stat-institutions', value: '8', labelKey: 'hero.stat.institutions', icon: 'bi-bank2' },
-  { key: 'stat-support', value: '24/7', labelKey: 'hero.stat.support', icon: 'bi-clock-history' },
-  { key: 'stat-free', value: null, labelKey: 'hero.stat.free', suffixKey: 'hero.stat.freeSuffix', icon: 'bi-patch-check-fill' },
-];
+function heroStats(institutionCount) {
+  return [
+    { key: 'stat-institutions', value: String(institutionCount), labelKey: 'hero.stat.institutions', icon: 'bi-bank2' },
+    { key: 'stat-support', value: '24/7', labelKey: 'hero.stat.support', icon: 'bi-clock-history' },
+    { key: 'stat-free', value: null, labelKey: 'hero.stat.free', suffixKey: 'hero.stat.freeSuffix', icon: 'bi-patch-check-fill' },
+  ];
+}
 
 const QUICK_SERVICES = [
   {
@@ -35,7 +36,7 @@ const QUICK_SERVICES = [
 ];
 
 export default function HomePage({ active }) {
-  const { goToPage, openModal, chat, pushToast, t } = useApp();
+  const { goToPage, openModal, chat, pushToast, t, liveInstitutions } = useApp();
   const [query, setQuery] = useState('');
 
   const submitQuery = () => {
@@ -43,7 +44,7 @@ export default function HomePage({ active }) {
   };
 
   const { listening, toggle: toggleVoice } = useVoiceInput({
-    onResult: (transcript) => setQuery(transcript),
+    onTranscript: (text) => setQuery(text),
     onNoSupport: () => pushToast('Voice input needs a browser like Chrome or Edge.'),
     onError: () => pushToast("Didn't catch that — try again."),
   });
@@ -75,22 +76,22 @@ export default function HomePage({ active }) {
             <p className="hero-sub-web">{t('hero.sub')}</p>
 
             <div className="hero-inst-pills">
-              {institutions.map((inst) => (
+              {liveInstitutions.map((inst) => (
                 <button
                   type="button"
-                  key={inst.code}
+                  key={inst.slug}
                   className="hero-inst-pill"
-                  onClick={() => goToPage('page-institutions')}
-                  aria-label={`${inst.short || inst.code} — open Institutions`}
+                  onClick={() => chat.startChat(`I have a question about the ${inst.name}`)}
+                  aria-label={`Ask Justice AI about ${inst.name}`}
                 >
                   <span className="hero-inst-pill-ic" aria-hidden="true"><InstitutionIcon type={inst.icon} color="currentColor" /></span>
-                  {inst.short || inst.code}
+                  {inst.code}
                 </button>
               ))}
             </div>
 
             <div className="hero-stats-row">
-              {HERO_STATS.map((stat) => (
+              {heroStats(liveInstitutions.length || 3).map((stat) => (
                 <div className="hero-stat" key={stat.key}>
                   <span className="hero-stat-ic"><i className={`bi ${stat.icon}`}></i></span>
                   <span className="hero-stat-text">

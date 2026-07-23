@@ -46,6 +46,7 @@ class EmbedInstitutionPages extends Command
             $this->info('  Split into '.count($chunkTexts).' chunk(s), generating embeddings...');
 
             $embeddings = Embeddings::for($chunkTexts)->dimensions(768)->generate()->embeddings;
+            //We are calling Gemini's embeddings API, to do the embeddings.
 
             // Replace existing chunks so re-runs don't create duplicates.
             $page->chunks()->delete();
@@ -65,7 +66,8 @@ class EmbedInstitutionPages extends Command
 
         return self::SUCCESS;
     }
-
+    
+    //This function creates the chunks
     protected function chunkText(string $text): array
     {
         $words = array_values(array_filter(preg_split('/\s+/', trim($text)), fn ($w) => $w !== ''));

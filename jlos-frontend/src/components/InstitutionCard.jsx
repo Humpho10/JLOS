@@ -5,11 +5,8 @@ import { useApp } from '../context/AppContext.jsx';
 import { activate } from '../utils/a11y.js';
 
 export default function InstitutionCard({ inst }) {
-  const { goToPage, pushToast } = useApp();
+  const { chat } = useApp();
   const [open, setOpen] = useState(false);
-  const [logoFailed, setLogoFailed] = useState(false);
-
-  const hasLogo = inst.logo && !logoFailed;
   const servicesId = `${inst.code}-services`;
   const toggle = () => setOpen((v) => !v);
 
@@ -25,15 +22,8 @@ export default function InstitutionCard({ inst }) {
         onClick={toggle}
         onKeyDown={activate(toggle)}
       >
-        <div
-          className="ic-logo"
-          style={{ background: hasLogo ? '#fff' : inst.color, border: hasLogo ? '1px solid var(--line)' : 'none' }}
-        >
-          {hasLogo ? (
-            <img src={inst.logo} alt={`${inst.name} logo`} onError={() => setLogoFailed(true)} />
-          ) : (
-            <InstitutionIcon type={inst.icon} color={hasLogo ? inst.color : '#fff'} />
-          )}
+        <div className="ic-logo" style={{ background: inst.color }}>
+          <InstitutionIcon type={inst.icon} color="#fff" />
         </div>
         <div>
           <div className="ic-name">{inst.name}</div>
@@ -50,17 +40,9 @@ export default function InstitutionCard({ inst }) {
             type="button"
             className="mc-btn primary"
             style={{ flex: 1, padding: '10px 0' }}
-            onClick={(e) => { e.stopPropagation(); goToPage('page-chat'); }}
+            onClick={(e) => { e.stopPropagation(); chat.startChat(`I have a question about the ${inst.name}`); }}
           >
             Chat now
-          </button>
-          <button
-            type="button"
-            className="mc-btn ghost"
-            style={{ flex: 1, padding: '10px 0' }}
-            onClick={(e) => { e.stopPropagation(); pushToast(`Calling ${inst.name} front desk...`); }}
-          >
-            Call
           </button>
         </div>
       </div>

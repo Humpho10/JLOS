@@ -1,20 +1,20 @@
 import React, { useMemo, useState } from 'react';
 import InstitutionCard from '../components/InstitutionCard.jsx';
-import { institutions } from '../data/institutions.js';
+import { comingSoonInstitutions } from '../data/institutionMeta.js';
 import { useApp } from '../context/AppContext.jsx';
 
 export default function InstitutionsPage({ active }) {
-  const { t } = useApp();
+  const { t, liveInstitutions } = useApp();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return institutions;
-    return institutions.filter((inst) => {
+    if (!q) return liveInstitutions;
+    return liveInstitutions.filter((inst) => {
       const haystack = (inst.name + ' ' + inst.sub + ' ' + inst.services.join(' ')).toLowerCase();
       return haystack.includes(q);
     });
-  }, [query]);
+  }, [query, liveInstitutions]);
 
   return (
     <section className={`page ${active ? 'active' : ''}`} id="page-institutions">
@@ -35,11 +35,22 @@ export default function InstitutionsPage({ active }) {
           />
         </div>
         <div className="inst-grid-web" id="instListWeb">
-          {filtered.map((inst) => <InstitutionCard inst={inst} key={inst.code} />)}
+          {filtered.map((inst) => <InstitutionCard inst={inst} key={inst.slug} />)}
         </div>
         {filtered.length === 0 && (
           <div className="no-results" id="noResultsWeb" role="status" style={{ display: 'block' }}>
             No institutions match your search.
+          </div>
+        )}
+
+        {!query.trim() && (
+          <div className="coming-soon-section">
+            <h3 className="coming-soon-title">More institutions joining soon</h3>
+            <div className="coming-soon-list">
+              {comingSoonInstitutions.map((inst) => (
+                <span className="coming-soon-chip" key={inst.code}>{inst.name}</span>
+              ))}
+            </div>
           </div>
         )}
       </div>

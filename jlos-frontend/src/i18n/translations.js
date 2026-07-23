@@ -27,7 +27,7 @@ export const translations = {
   },
 
   // ---------- hero ----------
-  'hero.badge': { English: 'One Portal · 8 Institutions · All for You', Luganda: 'Omulyango Gumu · Ebibiina 8 · Byonna gy’oli', Kiswahili: 'Lango Moja · Taasisi 8 · Vyote kwa Ajili Yako', Ateso: 'Ekot Alomit · Ijo 8 · Ijo Kesi' },
+  'hero.badge': { English: 'One Portal · Justice Made Simple · All for You', Luganda: 'Omulyango Gumu · Obwenkanya Bwanguddwa · Byonna gy’oli', Kiswahili: 'Lango Moja · Haki Iliyorahisishwa · Vyote kwa Ajili Yako', Ateso: 'Ekot Alomit · Ajokis Nu Aomor · Ijo Kesi' },
   'hero.stat.institutions': { English: 'Institutions', Luganda: 'Ebibiina', Kiswahili: 'Taasisi', Ateso: 'Ijo' },
   'hero.stat.support': { English: 'Support', Luganda: 'Obuyambi', Kiswahili: 'Msaada', Ateso: 'Iyupun' },
   'hero.stat.free': { English: 'Free', Luganda: 'Ya Bwerere', Kiswahili: 'Bure', Ateso: 'Mam Ipei' },
@@ -88,10 +88,10 @@ export const translations = {
   },
   'page.institutions.title': { English: 'JLOS Institutions', Luganda: 'Ebibiina bya JLOS', Kiswahili: 'Taasisi za JLOS', Ateso: 'Ijo ka JLOS' },
   'page.institutions.sub': {
-    English: 'All 8 institutions, one directory. Search by name or the service you need.',
-    Luganda: 'Ebibiina byonna 8, mu kalulu kamu. Noonya erinnya oba obuweereza bw’oyagala.',
-    Kiswahili: 'Taasisi zote 8, saraka moja. Tafuta kwa jina au huduma unayohitaji.',
-    Ateso: 'Ijo ka 8 kesi, alomit. Yenut ka ekiring nu akiyupun ijenu.',
+    English: 'Institutions Justice AI can help with today, with more joining soon. Search by name or the service you need.',
+    Luganda: 'Ebibiina Justice AI by’ayinza okukuyamba nabyo kati, n’ebirala nga bijja. Noonya erinnya oba obuweereza bw’oyagala.',
+    Kiswahili: 'Taasisi ambazo Justice AI inaweza kukusaidia nazo sasa, na nyingine zinakuja hivi karibuni. Tafuta kwa jina au huduma unayohitaji.',
+    Ateso: 'Ijo ka Justice AI keitakanakina kori nu, ka ijo lo bo ebe ejai. Yenut ka ekiring nu akiyupun ijenu.',
   },
   'page.track.title': { English: 'My Requests', Luganda: 'Ebisaba Byange', Kiswahili: 'Maombi Yangu', Ateso: 'Iyakis Lu' },
   'page.track.sub': {
@@ -114,7 +114,7 @@ export const translations = {
   'more.ussd.title': { English: 'USSD access (no internet)', Luganda: 'Okuyingira kwa USSD (tewali yintaneeti)', Kiswahili: 'Ufikiaji wa USSD (bila intaneti)', Ateso: 'USSD (mam internet)' },
   'more.ussd.desc': { English: 'Dial *256*5567# to reach us without data', Luganda: 'Kuba *256*5567# okutuukirira nga tolina ddaata', Kiswahili: 'Piga *256*5567# kutufikia bila data', Ateso: 'Ikub *256*5567# ijo mam data' },
   'more.access.title': { English: 'Display & Accessibility', Luganda: 'Enkola y’Endabika n’Okutuukirira', Kiswahili: 'Onyesho na Ufikivu', Ateso: 'Akirwo ka Akijenut' },
-  'more.access.desc': { English: 'Dark theme, audio read-aloud, text size', Luganda: 'Enkola enzikiza, okusomera waggulu, obunene bw’ennyukuta', Kiswahili: 'Mandhari meusi, kusoma kwa sauti, ukubwa wa maandishi', Ateso: 'Etem na risim, akibo, akirwo ka ikwerekwer' },
+  'more.access.desc': { English: 'Dark theme, text size, contrast', Luganda: 'Enkola enzikiza, obunene bw’ennyukuta, enjawukana y’ebbala', Kiswahili: 'Mandhari meusi, ukubwa wa maandishi, mng\'ao', Ateso: 'Etem na risim, akirwo ka ikwerekwer, aomor' },
   'more.language.title': { English: 'Language', Luganda: 'Olulimi', Kiswahili: 'Lugha', Ateso: 'Ateng' },
   'more.language.currentSuffix': { English: '(current)', Luganda: '(ekikozesebwa kati)', Kiswahili: '(inayotumika)', Ateso: '(nakigeni)' },
   'more.faqs.title': { English: 'FAQs & User Manual', Luganda: 'Ebibuuzo ebisinga okubuuzibwa n’Ekawuula', Kiswahili: 'Maswali Yanayoulizwa Mara kwa Mara na Mwongozo', Ateso: 'FAQ ka Ebuk' },
@@ -140,9 +140,9 @@ export const translations = {
   // ---------- language modal ----------
   'lang.title': { English: 'Choose language', Luganda: 'Londa olulimi', Kiswahili: 'Chagua lugha', Ateso: 'Yenut ateng' },
   'lang.note': {
-    English: 'Chat, USSD prompts and audio read-aloud follow this setting.',
-    Luganda: 'Okubuuliragana, obubaka bwa USSD n’okusomera waggulu bigoberera enkola eno.',
-    Kiswahili: 'Mazungumzo, maelekezo ya USSD na usomaji wa sauti hufuata mpangilio huu.',
-    Ateso: 'Chat, USSD ka akibo ejai atudi ka akirwo kani.',
+    English: 'This changes the app\'s menus and labels. Justice AI currently replies in English regardless of this setting.',
+    Luganda: 'Kino kikyusa emenu n’obubaka by’app. Justice AI kati addamu mu Lungereza, ka enkola eno bw’eba etya.',
+    Kiswahili: 'Hii hubadilisha menyu na lebo za programu. Justice AI kwa sasa hujibu kwa Kiingereza bila kujali mpangilio huu.',
+    Ateso: 'Kani ecubet ka menu na labels a app. Justice AI erot ka English, kotere kani.',
   },
 };

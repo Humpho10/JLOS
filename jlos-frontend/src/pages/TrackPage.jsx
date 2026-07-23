@@ -29,6 +29,9 @@ export default function TrackPage({ active }) {
           <h2>{t('page.track.title')}</h2>
           <p>{t('page.track.sub')}</p>
         </div>
+        <div className="sample-data-banner">
+          Sample data for demonstration — live ticket tracking isn't connected yet.
+        </div>
         <div className="track-grid-web">
           {TICKETS.map((tk) => (
             <TiltCard className="ticket-card" maxTilt={4} key={tk.id}>

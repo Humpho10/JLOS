@@ -69,3 +69,33 @@ export async function sendMessage(message) {
 
   return data.reply;
 }
+
+// Same endpoint, but with an image/PDF attached — Justice AI reads the file
+// itself (not just its filename) and answers using what it actually shows.
+export async function sendMessageWithAttachment(message, file) {
+  const form = new FormData();
+  if (message) form.append('message', message);
+  form.append('attachment', file);
+
+  let res;
+  try {
+    res = await fetch(`${API_URL}/api/chat`, {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      body: form,
+    });
+  } catch {
+    throw new ApiError(
+      "Can't reach the assistant right now — check that the API server is running.",
+      0
+    );
+  }
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new ApiError(data?.reply || 'Something went wrong. Please try again.', res.status);
+  }
+
+  return data.reply;
+}

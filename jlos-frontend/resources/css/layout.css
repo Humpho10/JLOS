@@ -10,7 +10,7 @@
   .navbar, .page, .site-footer{ position:relative; z-index:1; }
   /* ============ NAVBAR — floating rounded card ============ */
   .navbar{
-    position:sticky; top:14px; z-index:200;
+    z-index:200;
     margin:14px 20px 0;
     background:var(--card);
     backdrop-filter:saturate(160%) blur(14px);
