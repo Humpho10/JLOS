@@ -74,13 +74,32 @@ async function streamChat(path, message, { onDelta, onError }) {
   }
 }
 
-// Institution-agnostic chat — searches content across every institution
-// and answers based on whichever one the question is actually about.
-export function sendMessageStream(message, callbacks) {
-  return streamChat('/api/chat/stream', message, callbacks);
-}
+// Reads an attached image/PDF and returns a short description of it — the
+// caller drops that into the chat input the same way it does a voice
+// transcript, before it goes through the normal search-and-answer flow.
+export async function interpretAttachment(file) {
+  const form = new FormData();
+  form.append('attachment', file);
 
-// Scoped to a single institution's own content (its slug in the backend).
-export function sendInstitutionMessageStream(slug, message, callbacks) {
-  return streamChat(`/api/institutions/${slug}/chat/stream`, message, callbacks);
+  let res;
+  try {
+    res = await fetch(`${API_URL}/api/chat/interpret-attachment`, {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      body: form,
+    });
+  } catch {
+    throw new ApiError(
+      "Can't reach the assistant right now — check that the API server is running.",
+      0
+    );
+  }
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok || !data?.description) {
+    throw new ApiError(data?.error || 'Could not read that file. Please try again.', res.status);
+  }
+
+  return data.description;
 }

@@ -31,7 +31,7 @@ export default function HomePage({ active }) {
   };
 
   const { listening, toggle: toggleVoice } = useVoiceInput({
-    onResult: (transcript) => setQuery(transcript),
+    onTranscript: (text) => setQuery(text),
     onNoSupport: () => pushToast('Voice input needs a browser like Chrome or Edge.'),
     onError: () => pushToast("Didn't catch that — try again."),
   });

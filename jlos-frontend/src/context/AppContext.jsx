@@ -1,7 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { translations } from '../i18n/translations.js';
-import { fetchInstitutions, sendMessageStream } from '../lib/api.js';
-import { useChatSession } from '../hooks/useChatSession.js';
+import { fetchInstitutions, sendMessageStream, interpretAttachment, ApiError } from '../lib/api.js';
 
 // ============================================================
 // Central app state — navigation, theme, modals, toasts,
@@ -118,17 +117,111 @@ export function AppProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const addMessage = useCallback((msg) => {
+    setMessages((prev) => [...prev, { id: nextId(), ...msg }]);
+  }, []);
+  const addTyping = useCallback(() => {
+    setMessages((prev) => [...prev, { id: 'typing', kind: 'typing' }]);
+  }, []);
+  const removeTyping = useCallback(() => {
+    setMessages((prev) => prev.filter((m) => m.id !== 'typing'));
+  }, []);
+  const appendToMessage = useCallback((id, chunk) => {
+    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, text: m.text + chunk } : m)));
+  }, []);
+
+  // `overrideText`, when given, is used instead of the current `chatInput`
+  // state — needed by findService(), which sets the input and immediately
+  // sends it in the same tick (before React re-renders chatInput).
+  const runChatDemo = useCallback((overrideText) => {
+    const text = (overrideText !== undefined ? overrideText : chatInput).trim();
+    if (!text) return;
+
+    addMessage({ kind: 'user', text });
+    setChatInput('');
+    setChatStatus('● Justice AI is typing...');
+    addTyping();
+
+    // Tokens stream in as they're generated, so the bot message is created
+    // on the first chunk and grown in place rather than added all at once.
+    let botMessageId = null;
+    let messageShown = false;
+
+    sendMessageStream(text, {
+      onDelta: (chunk) => {
+        messageShown = true;
+        if (botMessageId === null) {
+          removeTyping();
+          botMessageId = nextId();
+          setMessages((prev) => [
+            ...prev,
+            { id: botMessageId, kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: chunk },
+          ]);
+        } else {
+          appendToMessage(botMessageId, chunk);
+        }
+      },
+      onError: (message) => {
+        messageShown = true;
+        if (botMessageId === null) {
+          removeTyping();
+          addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: message });
+        } else {
+          appendToMessage(botMessageId, `\n\n${message}`);
+        }
+      },
+    })
+      .catch(() => {
+        messageShown = true;
+        removeTyping();
+        addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: 'Something went wrong. Please try again.' });
+      })
+      .finally(() => {
+        if (!messageShown) {
+          removeTyping();
+          addMessage({
+            kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️',
+            text: "I couldn't find relevant information for that — try rephrasing your question.",
+          });
+        }
+        setChatStatus('● Online — usually replies instantly');
+      });
+  }, [chatInput, addMessage, addTyping, removeTyping, appendToMessage]);
+
+  // Reads the attached image/PDF into a short description and feeds it
+  // through the same runChatDemo() flow as typed or spoken input — the
+  // same "whatever gets you text into the box becomes the query" pattern
+  // used by voice input.
   const handleFileAttach = useCallback((file) => {
     if (!file) return;
+
     const isImage = file.type && file.type.startsWith('image/');
+    const isPdf = file.type === 'application/pdf';
+    if (!isImage && !isPdf) {
+      pushToast("Justice AI can read images and PDFs — that file type isn't supported yet.");
+      return;
+    }
+
     const sizeLabel = formatSize(file.size);
     const url = isImage ? URL.createObjectURL(file) : null;
     addMessage({ kind: 'file-msg', isImage, url, name: file.name, sizeLabel });
-    addMessage({
-      kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️',
-      text: "Thanks for sharing that — this prototype doesn't read attached files yet, so please describe what's in it and I'll help from there.",
-    });
-  }, [addMessage]);
+    setChatStatus('● Justice AI is reading the attachment...');
+    addTyping();
+
+    interpretAttachment(file)
+      .then((description) => {
+        removeTyping();
+        setChatStatus('● Online — usually replies instantly');
+        setChatInput(description);
+        runChatDemo(description);
+      })
+      .catch((err) => {
+        removeTyping();
+        setChatStatus('● Online — usually replies instantly');
+        const errText = err instanceof ApiError ? err.message : 'Something went wrong. Please try again.';
+        addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: errText });
+      });
+  }, [addMessage, addTyping, removeTyping, pushToast, runChatDemo]);
 
   const startChat = useCallback((text) => {
     goToPage('page-chat');

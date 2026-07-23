@@ -117,11 +117,8 @@ export default function ChatPage({ active }) {
   }, []);
 
   const { listening, toggle: toggleVoiceInput } = useVoiceInput({
-    onInterimResult: (transcript) => chat.setChatInput(transcript),
-    onResult: (transcript) => {
-      chat.setChatInput(transcript);
-      setTimeout(() => chat.runChatDemo(transcript), 300);
-    },
+    onTranscript: (text) => chat.setChatInput(text),
+    onFinish: (text) => chat.runChatDemo(text),
     onNoSupport: () => pushToast('Voice input needs a browser like Chrome or Edge.'),
     onError: () => pushToast("Didn't catch that — try again."),
   });
@@ -152,7 +149,7 @@ export default function ChatPage({ active }) {
             <input
               type="file"
               id="chatFileInputWeb"
-              accept="image/*,.pdf,.doc,.docx"
+              accept="image/*,.pdf"
               style={{ display: 'none' }}
               ref={fileInputRef}
               onChange={(e) => {
@@ -160,7 +157,7 @@ export default function ChatPage({ active }) {
                 e.target.value = '';
               }}
             />
-            <button type="button" className="attach-btn" title="Attach a file" aria-label="Attach a file" onClick={() => fileInputRef.current && fileInputRef.current.click()}>
+            <button type="button" className="attach-btn" title="Attach an image or PDF" aria-label="Attach an image or PDF" onClick={() => fileInputRef.current && fileInputRef.current.click()}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.19 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>
             </button>
             <textarea

@@ -15,3 +15,4 @@ Route::post('/institutions/{slug}/chat', [InstitutionChatController::class, 'cha
 Route::post('/institutions/{slug}/chat/stream', [InstitutionChatController::class, 'stream']);
 Route::post('/chat', [ChatController::class, 'chat']);
 Route::post('/chat/stream', [ChatController::class, 'stream']);
+Route::post('/chat/interpret-attachment', [ChatController::class, 'interpretAttachment']);
