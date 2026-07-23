@@ -12,4 +12,6 @@ Route::get('/user', function (Request $request) {
 
 Route::get('/institutions', [InstitutionController::class, 'index']);
 Route::post('/institutions/{slug}/chat', [InstitutionChatController::class, 'chat']);
+Route::post('/institutions/{slug}/chat/stream', [InstitutionChatController::class, 'stream']);
 Route::post('/chat', [ChatController::class, 'chat']);
+Route::post('/chat/stream', [ChatController::class, 'stream']);

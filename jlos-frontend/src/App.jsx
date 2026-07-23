@@ -66,7 +66,7 @@ function Shell() {
         ))}
       </main>
 
-      <Footer />
+      {activePage !== 'page-chat' && <Footer />}
 
       <FloatingAssistant />
 

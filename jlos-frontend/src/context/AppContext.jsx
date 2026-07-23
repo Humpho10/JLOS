@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { translations } from '../i18n/translations.js';
-import { fetchInstitutions, sendMessage, ApiError } from '../lib/api.js';
+import { fetchInstitutions, sendMessageStream } from '../lib/api.js';
 
 // ============================================================
 // Central app state — navigation, theme, modals, toasts,
@@ -126,6 +126,9 @@ export function AppProvider({ children }) {
   const removeTyping = useCallback(() => {
     setMessages((prev) => prev.filter((m) => m.id !== 'typing'));
   }, []);
+  const appendToMessage = useCallback((id, chunk) => {
+    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, text: m.text + chunk } : m)));
+  }, []);
 
   // `overrideText`, when given, is used instead of the current `chatInput`
   // state — needed by findService(), which sets the input and immediately
@@ -139,19 +142,51 @@ export function AppProvider({ children }) {
     setChatStatus('● Justice AI is typing...');
     addTyping();
 
-    sendMessage(text)
-      .then((reply) => {
+    // Tokens stream in as they're generated, so the bot message is created
+    // on the first chunk and grown in place rather than added all at once.
+    let botMessageId = null;
+    let messageShown = false;
+
+    sendMessageStream(text, {
+      onDelta: (chunk) => {
+        messageShown = true;
+        if (botMessageId === null) {
+          removeTyping();
+          botMessageId = nextId();
+          setMessages((prev) => [
+            ...prev,
+            { id: botMessageId, kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: chunk },
+          ]);
+        } else {
+          appendToMessage(botMessageId, chunk);
+        }
+      },
+      onError: (message) => {
+        messageShown = true;
+        if (botMessageId === null) {
+          removeTyping();
+          addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: message });
+        } else {
+          appendToMessage(botMessageId, `\n\n${message}`);
+        }
+      },
+    })
+      .catch(() => {
+        messageShown = true;
         removeTyping();
-        addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: reply });
-        setChatStatus('● Online — usually replies instantly');
+        addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: 'Something went wrong. Please try again.' });
       })
-      .catch((err) => {
-        removeTyping();
-        const errText = err instanceof ApiError ? err.message : 'Something went wrong. Please try again.';
-        addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: errText });
+      .finally(() => {
+        if (!messageShown) {
+          removeTyping();
+          addMessage({
+            kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️',
+            text: "I couldn't find relevant information for that — try rephrasing your question.",
+          });
+        }
         setChatStatus('● Online — usually replies instantly');
       });
-  }, [chatInput, addMessage, addTyping, removeTyping]);
+  }, [chatInput, addMessage, addTyping, removeTyping, appendToMessage]);
 
   const handleFileAttach = useCallback((file) => {
     if (!file) return;
