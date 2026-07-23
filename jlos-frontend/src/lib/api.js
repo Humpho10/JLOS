@@ -122,3 +122,33 @@ export async function sendMessageStream(message, { onDelta, onError }) {
     }
   }
 }
+
+// Reads an attached image/PDF and returns a short description of it — the
+// caller drops that into the chat input the same way it does a voice
+// transcript, before it goes through the normal search-and-answer flow.
+export async function interpretAttachment(file) {
+  const form = new FormData();
+  form.append('attachment', file);
+
+  let res;
+  try {
+    res = await fetch(`${API_URL}/api/chat/interpret-attachment`, {
+      method: 'POST',
+      headers: { Accept: 'application/json' },
+      body: form,
+    });
+  } catch {
+    throw new ApiError(
+      "Can't reach the assistant right now — check that the API server is running.",
+      0
+    );
+  }
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok || !data?.description) {
+    throw new ApiError(data?.error || 'Could not read that file. Please try again.', res.status);
+  }
+
+  return data.description;
+}

@@ -3,9 +3,7 @@
   "configurations": [
     {
       "name": "jlos-frontend",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "jlos-frontend"],
-      "port": 5173
+      "url": "http://localhost:5175"
     }
   ]
 }

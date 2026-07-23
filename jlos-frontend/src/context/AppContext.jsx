@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { translations } from '../i18n/translations.js';
-import { fetchInstitutions, sendMessageStream } from '../lib/api.js';
+import { fetchInstitutions, sendMessageStream, interpretAttachment, ApiError } from '../lib/api.js';
 
 // ============================================================
 // Central app state — navigation, theme, modals, toasts,
@@ -188,17 +188,40 @@ export function AppProvider({ children }) {
       });
   }, [chatInput, addMessage, addTyping, removeTyping, appendToMessage]);
 
+  // Reads the attached image/PDF into a short description and feeds it
+  // through the same runChatDemo() flow as typed or spoken input — the
+  // same "whatever gets you text into the box becomes the query" pattern
+  // used by voice input.
   const handleFileAttach = useCallback((file) => {
     if (!file) return;
+
     const isImage = file.type && file.type.startsWith('image/');
+    const isPdf = file.type === 'application/pdf';
+    if (!isImage && !isPdf) {
+      pushToast("Justice AI can read images and PDFs — that file type isn't supported yet.");
+      return;
+    }
+
     const sizeLabel = formatSize(file.size);
     const url = isImage ? URL.createObjectURL(file) : null;
     addMessage({ kind: 'file-msg', isImage, url, name: file.name, sizeLabel });
-    addMessage({
-      kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️',
-      text: "Thanks for sharing that — this prototype doesn't read attached files yet, so please describe what's in it and I'll help from there.",
-    });
-  }, [addMessage]);
+    setChatStatus('● Justice AI is reading the attachment...');
+    addTyping();
+
+    interpretAttachment(file)
+      .then((description) => {
+        removeTyping();
+        setChatStatus('● Online — usually replies instantly');
+        setChatInput(description);
+        runChatDemo(description);
+      })
+      .catch((err) => {
+        removeTyping();
+        setChatStatus('● Online — usually replies instantly');
+        const errText = err instanceof ApiError ? err.message : 'Something went wrong. Please try again.';
+        addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: errText });
+      });
+  }, [addMessage, addTyping, removeTyping, pushToast, runChatDemo]);
 
   const startChat = useCallback((text) => {
     goToPage('page-chat');

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Ai\Agents\AttachmentInterpreterAgent;
 use App\Ai\Agents\GeneralAgent;
 use Illuminate\Http\Request;
 use Laravel\Ai\Exceptions\ProviderOverloadedException;
@@ -94,5 +95,32 @@ class ChatController extends Controller
             'message' => $request->input('message'),
             'reply' => $response->text ?: "I couldn't find relevant information for that — try rephrasing your question.",
         ]);
+    }
+
+    /**
+     * Reads an attached image/PDF and turns it into a short descriptive
+     * sentence — the frontend drops that into the chat input the same way
+     * it does a voice transcript, so the user can review/edit it before it
+     * goes through the normal search-and-answer flow.
+     */
+    public function interpretAttachment(Request $request)
+    {
+        $request->validate([
+            'attachment' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:8192',
+        ]);
+
+        try {
+            $response = (new AttachmentInterpreterAgent)->respond([$request->file('attachment')]);
+        } catch (RateLimitedException $e) {
+            return response()->json(['error' => "I'm getting rate limited by the AI provider right now. Please wait a bit and try again."], 429);
+        } catch (ProviderOverloadedException $e) {
+            return response()->json(['error' => 'The AI provider is temporarily overloaded. Please try again in a moment.'], 503);
+        } catch (Throwable $e) {
+            report($e);
+
+            return response()->json(['error' => 'Could not read that file. Please try again or describe it yourself.'], 500);
+        }
+
+        return response()->json(['description' => trim($response->text)]);
     }
 }
