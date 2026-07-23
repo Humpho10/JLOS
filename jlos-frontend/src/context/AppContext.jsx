@@ -41,6 +41,122 @@ function formatSize(bytes) {
   return (kb / 1024).toFixed(1) + ' MB';
 }
 
+// ------------------------------------------------------------
+// useChatSession — shared engine behind both the general Justice
+// AI chat and the per-institution "contact" chat. Owns messages,
+// status, and the current input, and knows how to stream a reply
+// from whatever `streamFn(text, { onDelta, onError })` it's given.
+//
+// `getBotMeta` lets callers customize who the "bot" bubble is
+// attributed to (Justice AI vs. a specific institution) — it's
+// re-resolved on every run() so it always reflects the latest
+// caller-side state (e.g. the currently active institution).
+// ------------------------------------------------------------
+function useChatSession({
+  streamFn,
+  initialMessages: initial = [],
+  typingStatus = '● Justice AI is typing...',
+  idleStatus = '● Online — usually replies instantly',
+  getBotMeta,
+}) {
+  const [messages, setMessages] = useState(initial);
+  const [status, setStatus] = useState(idleStatus);
+  const [input, setInput] = useState('');
+
+  const resolveBotMeta = useCallback(
+    () => (getBotMeta ? getBotMeta() : { name: 'Justice AI', avatar: '⚖️' }),
+    [getBotMeta]
+  );
+
+  const addMessage = useCallback((msg) => {
+    setMessages((prev) => [...prev, { id: nextId(), ...msg }]);
+  }, []);
+  const addTyping = useCallback(() => {
+    setMessages((prev) => [...prev, { id: 'typing', kind: 'typing' }]);
+  }, []);
+  const removeTyping = useCallback(() => {
+    setMessages((prev) => prev.filter((m) => m.id !== 'typing'));
+  }, []);
+  const appendToMessage = useCallback((id, chunk) => {
+    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, text: m.text + chunk } : m)));
+  }, []);
+
+  const reset = useCallback((msgs) => {
+    setMessages(msgs.map((m) => ({ id: nextId(), ...m })));
+    setStatus(idleStatus);
+    setInput('');
+  }, [idleStatus]);
+
+  // `overrideText`, when given, is used instead of the current `input`
+  // state — needed by findService()/handleFileAttach(), which set the
+  // input and immediately send it in the same tick (before React
+  // re-renders `input`).
+  const run = useCallback((overrideText) => {
+    const text = (overrideText !== undefined ? overrideText : input).trim();
+    if (!text) return;
+
+    const { name, avatar } = resolveBotMeta();
+
+    addMessage({ kind: 'user', text });
+    setInput('');
+    setStatus(typingStatus);
+    addTyping();
+
+    // Tokens stream in as they're generated, so the bot message is
+    // created on the first chunk and grown in place rather than added
+    // all at once.
+    let botMessageId = null;
+    let messageShown = false;
+
+    streamFn(text, {
+      onDelta: (chunk) => {
+        messageShown = true;
+        if (botMessageId === null) {
+          removeTyping();
+          botMessageId = nextId();
+          setMessages((prev) => [
+            ...prev,
+            { id: botMessageId, kind: 'bot', responder: 'ai', name, avatar, text: chunk },
+          ]);
+        } else {
+          appendToMessage(botMessageId, chunk);
+        }
+      },
+      onError: (message) => {
+        messageShown = true;
+        if (botMessageId === null) {
+          removeTyping();
+          addMessage({ kind: 'bot', responder: 'ai', name, avatar, text: message });
+        } else {
+          appendToMessage(botMessageId, `\n\n${message}`);
+        }
+      },
+    })
+      .catch(() => {
+        messageShown = true;
+        removeTyping();
+        addMessage({ kind: 'bot', responder: 'ai', name, avatar, text: 'Something went wrong. Please try again.' });
+      })
+      .finally(() => {
+        if (!messageShown) {
+          removeTyping();
+          addMessage({
+            kind: 'bot', responder: 'ai', name, avatar,
+            text: "I couldn't find relevant information for that — try rephrasing your question.",
+          });
+        }
+        setStatus(idleStatus);
+      });
+  }, [input, streamFn, resolveBotMeta, addMessage, addTyping, removeTyping, appendToMessage, typingStatus, idleStatus]);
+
+  return {
+    messages, status, setStatus,
+    input, setInput,
+    addMessage, addTyping, removeTyping, appendToMessage,
+    run, reset,
+  };
+}
+
 export function AppProvider({ children }) {
   // ---------- navigation ----------
   const [activePage, setActivePage] = useState('page-home');
@@ -97,12 +213,11 @@ export function AppProvider({ children }) {
     return entry[language] || entry.English || key;
   }, [language]);
 
-  // ---------- general chat ----------
+  // ---------- general Justice AI chat ----------
   const generalChat = useChatSession({
     streamFn: sendMessageStream,
     initialMessages: initialMessages(),
   });
-  const { setInput: setChatInput, run: runChatDemo, addMessage } = generalChat;
 
   // On load, just confirm the backend is reachable.
   useEffect(() => {
@@ -117,80 +232,22 @@ export function AppProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const addMessage = useCallback((msg) => {
-    setMessages((prev) => [...prev, { id: nextId(), ...msg }]);
-  }, []);
-  const addTyping = useCallback(() => {
-    setMessages((prev) => [...prev, { id: 'typing', kind: 'typing' }]);
-  }, []);
-  const removeTyping = useCallback(() => {
-    setMessages((prev) => prev.filter((m) => m.id !== 'typing'));
-  }, []);
-  const appendToMessage = useCallback((id, chunk) => {
-    setMessages((prev) => prev.map((m) => (m.id === id ? { ...m, text: m.text + chunk } : m)));
-  }, []);
+  const startChat = useCallback((text) => {
+    goToPage('page-chat');
+    setTimeout(() => generalChat.setInput(text), 50);
+  }, [goToPage, generalChat]);
 
-  // `overrideText`, when given, is used instead of the current `chatInput`
-  // state — needed by findService(), which sets the input and immediately
-  // sends it in the same tick (before React re-renders chatInput).
-  const runChatDemo = useCallback((overrideText) => {
-    const text = (overrideText !== undefined ? overrideText : chatInput).trim();
-    if (!text) return;
-
-    addMessage({ kind: 'user', text });
-    setChatInput('');
-    setChatStatus('● Justice AI is typing...');
-    addTyping();
-
-    // Tokens stream in as they're generated, so the bot message is created
-    // on the first chunk and grown in place rather than added all at once.
-    let botMessageId = null;
-    let messageShown = false;
-
-    sendMessageStream(text, {
-      onDelta: (chunk) => {
-        messageShown = true;
-        if (botMessageId === null) {
-          removeTyping();
-          botMessageId = nextId();
-          setMessages((prev) => [
-            ...prev,
-            { id: botMessageId, kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: chunk },
-          ]);
-        } else {
-          appendToMessage(botMessageId, chunk);
-        }
-      },
-      onError: (message) => {
-        messageShown = true;
-        if (botMessageId === null) {
-          removeTyping();
-          addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: message });
-        } else {
-          appendToMessage(botMessageId, `\n\n${message}`);
-        }
-      },
-    })
-      .catch(() => {
-        messageShown = true;
-        removeTyping();
-        addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: 'Something went wrong. Please try again.' });
-      })
-      .finally(() => {
-        if (!messageShown) {
-          removeTyping();
-          addMessage({
-            kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️',
-            text: "I couldn't find relevant information for that — try rephrasing your question.",
-          });
-        }
-        setChatStatus('● Online — usually replies instantly');
-      });
-  }, [chatInput, addMessage, addTyping, removeTyping, appendToMessage]);
+  const findService = useCallback((query) => {
+    goToPage('page-chat');
+    setTimeout(() => {
+      generalChat.setInput(query);
+      generalChat.run(query);
+    }, 300);
+  }, [goToPage, generalChat]);
 
   // Reads the attached image/PDF into a short description and feeds it
-  // through the same runChatDemo() flow as typed or spoken input — the
-  // same "whatever gets you text into the box becomes the query" pattern
+  // through the same run() flow as typed or spoken input — the same
+  // "whatever gets you text into the box becomes the query" pattern
   // used by voice input.
   const handleFileAttach = useCallback((file) => {
     if (!file) return;
@@ -204,37 +261,24 @@ export function AppProvider({ children }) {
 
     const sizeLabel = formatSize(file.size);
     const url = isImage ? URL.createObjectURL(file) : null;
-    addMessage({ kind: 'file-msg', isImage, url, name: file.name, sizeLabel });
-    setChatStatus('● Justice AI is reading the attachment...');
-    addTyping();
+    generalChat.addMessage({ kind: 'file-msg', isImage, url, name: file.name, sizeLabel });
+    generalChat.setStatus('● Justice AI is reading the attachment...');
+    generalChat.addTyping();
 
     interpretAttachment(file)
       .then((description) => {
-        removeTyping();
-        setChatStatus('● Online — usually replies instantly');
-        setChatInput(description);
-        runChatDemo(description);
+        generalChat.removeTyping();
+        generalChat.setStatus('● Online — usually replies instantly');
+        generalChat.setInput(description);
+        generalChat.run(description);
       })
       .catch((err) => {
-        removeTyping();
-        setChatStatus('● Online — usually replies instantly');
+        generalChat.removeTyping();
+        generalChat.setStatus('● Online — usually replies instantly');
         const errText = err instanceof ApiError ? err.message : 'Something went wrong. Please try again.';
-        addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: errText });
+        generalChat.addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: errText });
       });
-  }, [addMessage, addTyping, removeTyping, pushToast, runChatDemo]);
-
-  const startChat = useCallback((text) => {
-    goToPage('page-chat');
-    setTimeout(() => setChatInput(text), 50);
-  }, [goToPage, setChatInput]);
-
-  const findService = useCallback((query) => {
-    goToPage('page-chat');
-    setTimeout(() => {
-      setChatInput(query);
-      runChatDemo(query);
-    }, 300);
-  }, [goToPage, setChatInput, runChatDemo]);
+  }, [generalChat, pushToast]);
 
   // ---------- institution contact page ----------
   // This is a "message this institution" channel, not the AI — sending a
@@ -261,6 +305,10 @@ export function AppProvider({ children }) {
     streamFn: contactStreamFn,
     initialMessages: [],
     typingStatus: '● Sending...',
+    getBotMeta: () => ({
+      name: activeInstitution?.short || activeInstitution?.name || 'Support',
+      avatar: '⚖️',
+    }),
   });
 
   const goToInstitutionContact = useCallback((inst) => {
@@ -291,8 +339,8 @@ export function AppProvider({ children }) {
     language, setLanguage, t,
     chat: {
       messages: generalChat.messages, chatStatus: generalChat.status,
-      chatInput: generalChat.input, setChatInput,
-      runChatDemo, handleFileAttach, startChat, findService,
+      chatInput: generalChat.input, setChatInput: generalChat.setInput,
+      runChatDemo: generalChat.run, handleFileAttach, startChat, findService,
     },
     activeInstitution, goToInstitutionContact,
     institutionChat: {
