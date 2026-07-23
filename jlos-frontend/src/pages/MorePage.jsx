@@ -4,19 +4,9 @@ import { useApp } from '../context/AppContext.jsx';
 import { activate } from '../utils/a11y.js';
 
 export default function MorePage({ active }) {
-  const { goToPage, openModal, language, t } = useApp();
+  const { openModal, language, t } = useApp();
 
   const items = [
-    {
-      onClick: () => goToPage('page-track'),
-      icon: <path d="M9 11l3 3L22 4M21 12v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h11" />,
-      titleKey: 'more.myRequests.title', descKey: 'more.myRequests.desc',
-    },
-    {
-      onClick: () => openModal('ussdModal'),
-      icon: <><rect x="7" y="2" width="10" height="20" rx="2" /><path d="M11 18h2" /></>,
-      titleKey: 'more.ussd.title', descKey: 'more.ussd.desc',
-    },
     {
       onClick: () => openModal('accessModal'),
       icon: <><circle cx="12" cy="12" r="10" /><path d="M8 12h8M12 8v8" /></>,

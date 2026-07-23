@@ -20,63 +20,14 @@ export async function fetchInstitutions() {
   return res.json();
 }
 
-export async function sendInstitutionMessage(slug, message) {
+// Reads a chat reply as Server-Sent Events, reporting each text chunk as it
+// arrives via onDelta instead of waiting for the whole reply before
+// returning anything. Shared by the general and institution-scoped chats —
+// they only differ in which endpoint they stream from.
+async function streamChat(path, message, { onDelta, onError }) {
   let res;
   try {
-    res = await fetch(`${API_URL}/api/institutions/${slug}/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ message }),
-    });
-  } catch {
-    throw new ApiError(
-      "Can't reach the assistant right now — check that the API server is running.",
-      0
-    );
-  }
-
-  const data = await res.json().catch(() => null);
-
-  if (!res.ok) {
-    throw new ApiError(data?.reply || 'Something went wrong. Please try again.', res.status);
-  }
-
-  return data.reply;
-}
-
-// Institution-agnostic chat — searches content across every institution
-// and answers based on whichever one the question is actually about.
-export async function sendMessage(message) {
-  let res;
-  try {
-    res = await fetch(`${API_URL}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      body: JSON.stringify({ message }),
-    });
-  } catch {
-    throw new ApiError(
-      "Can't reach the assistant right now — check that the API server is running.",
-      0
-    );
-  }
-
-  const data = await res.json().catch(() => null);
-
-  if (!res.ok) {
-    throw new ApiError(data?.reply || 'Something went wrong. Please try again.', res.status);
-  }
-
-  return data.reply;
-}
-
-// Streaming variant of sendMessage() — reads the reply as Server-Sent
-// Events and reports each text chunk as it arrives via onDelta, instead of
-// waiting for the whole reply before returning anything.
-export async function sendMessageStream(message, { onDelta, onError }) {
-  let res;
-  try {
-    res = await fetch(`${API_URL}/api/chat/stream`, {
+    res = await fetch(`${API_URL}${path}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
       body: JSON.stringify({ message }),

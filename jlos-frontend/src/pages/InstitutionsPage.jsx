@@ -1,10 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import InstitutionCard from '../components/InstitutionCard.jsx';
 import { institutions } from '../data/institutions.js';
 import { useApp } from '../context/AppContext.jsx';
 
 export default function InstitutionsPage({ active }) {
-  const { t } = useApp();
+  const { t, focusInstitutionCode } = useApp();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -15,6 +15,16 @@ export default function InstitutionsPage({ active }) {
       return haystack.includes(q);
     });
   }, [query]);
+
+  // Jumped here from elsewhere (e.g. a home page institution pill) with a
+  // specific institution in mind — scroll straight to its card once this
+  // page is actually visible, instead of leaving the user at the top of
+  // the full, unfiltered list.
+  useEffect(() => {
+    if (!active || !focusInstitutionCode) return;
+    const el = document.getElementById(`inst-${focusInstitutionCode}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [active, focusInstitutionCode]);
 
   return (
     <section className={`page ${active ? 'active' : ''}`} id="page-institutions">
@@ -35,7 +45,9 @@ export default function InstitutionsPage({ active }) {
           />
         </div>
         <div className="inst-grid-web" id="instListWeb">
-          {filtered.map((inst) => <InstitutionCard inst={inst} key={inst.code} />)}
+          {filtered.map((inst) => (
+            <InstitutionCard inst={inst} key={inst.code} autoOpen={inst.code === focusInstitutionCode} />
+          ))}
         </div>
         {filtered.length === 0 && (
           <div className="no-results" id="noResultsWeb" role="status" style={{ display: 'block' }}>

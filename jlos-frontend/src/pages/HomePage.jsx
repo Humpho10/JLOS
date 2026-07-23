@@ -11,19 +11,7 @@ const HERO_STATS = [
   { key: 'stat-free', value: null, labelKey: 'hero.stat.free', suffixKey: 'hero.stat.freeSuffix', icon: 'bi-patch-check-fill' },
 ];
 
-const QUICK_SERVICES = [
-  {
-    id: 'file-complaint', titleKey: 'qs.fileComplaint', subKey: 'qs.fileComplaint.sub',
-    bg: 'linear-gradient(135deg,#FDECEA,#F9D2CB)', color: '#B3261E', icon: 'bi-exclamation-triangle-fill',
-  },
-  {
-    id: 'book-appointment', titleKey: 'qs.bookAppointment', subKey: 'qs.bookAppointment.sub',
-    bg: 'linear-gradient(135deg,#EAF0F6,#D3E2F0)', color: '#0E2A47', icon: 'bi-calendar2-check-fill',
-  },
-  {
-    id: 'track-request', titleKey: 'qs.trackRequest', subKey: 'qs.trackRequest.sub',
-    bg: 'linear-gradient(135deg,#FBF3DC,#F2E0AC)', color: '#C79A2E', icon: 'bi-clipboard2-check-fill',
-  },
+/*const QUICK_SERVICES = [
   {
     id: 'browse-services', titleKey: 'qs.browseServices', subKey: 'qs.browseServices.sub',
     bg: 'linear-gradient(135deg,#E4F5EA,#C6E9D2)', color: '#1F8A57', icon: 'bi-grid-3x3-gap-fill',
@@ -32,10 +20,10 @@ const QUICK_SERVICES = [
     id: 'contact-centre', titleKey: 'qs.contactCentre', subKey: 'qs.contactCentre.sub',
     bg: 'linear-gradient(135deg,#F1EAFB,#DFCCF4)', color: '#6B3FA0', icon: 'bi-headset',
   },
-];
+];*/
 
 export default function HomePage({ active }) {
-  const { goToPage, openModal, chat, pushToast, t } = useApp();
+  const { goToPage, goToInstitution, openModal, chat, pushToast, t } = useApp();
   const [query, setQuery] = useState('');
 
   const submitQuery = () => {
@@ -48,13 +36,10 @@ export default function HomePage({ active }) {
     onError: () => pushToast("Didn't catch that — try again."),
   });
 
-  const runQuickService = (id) => {
-    if (id === 'file-complaint') chat.startChat('I want to file a complaint');
-    else if (id === 'book-appointment') openModal('bookModal');
-    else if (id === 'track-request') goToPage('page-track');
-    else if (id === 'browse-services') openModal('servicesModal');
+  /*const runQuickService = (id) => {
+    if (id === 'browse-services') openModal('servicesModal');
     else if (id === 'contact-centre') openModal('supportModal');
-  };
+  };*/
 
   return (
     <section className={`page ${active ? 'active' : ''}`} id="page-home">
@@ -80,8 +65,8 @@ export default function HomePage({ active }) {
                   type="button"
                   key={inst.code}
                   className="hero-inst-pill"
-                  onClick={() => goToPage('page-institutions')}
-                  aria-label={`${inst.short || inst.code} — open Institutions`}
+                  onClick={() => goToInstitution(inst.code)}
+                  aria-label={`${inst.short || inst.code} — view services`}
                 >
                   <span className="hero-inst-pill-ic" aria-hidden="true"><InstitutionIcon type={inst.icon} color="currentColor" /></span>
                   {inst.short || inst.code}
@@ -145,36 +130,12 @@ export default function HomePage({ active }) {
                   <span>{t('hero.getInstantAnswers')}</span>
                 </div>
               </button>
-              <button type="button" className="hero-option-card" onClick={() => openModal('ussdModal')} aria-haspopup="dialog">
-                <div className="hero-option-ic teal" aria-hidden="true"><i className="bi bi-telephone-fill"></i></div>
-                <div className="hero-option-text">
-                  <b>{t('hero.speakToUs')}</b>
-                  <span>{t('hero.dial')} *256*5567#</span>
-                </div>
-              </button>
             </div>
-
-            <button type="button" className="hero-ussd-link" onClick={() => openModal('ussdModal')} aria-haspopup="dialog">
-              {t('hero.ussd')} <b>*256*5567#</b> — {t('hero.ussdSuffix')}
-            </button>
           </TiltCard>
         </div>
       </div>
 
-      <div className="quick-services-panel">
-        {QUICK_SERVICES.map((svc) => (
-          <button type="button" className="quick-svc-item" key={svc.id} onClick={() => runQuickService(svc.id)}>
-            <div className="quick-svc-ic" style={{ background: svc.bg, color: svc.color }} aria-hidden="true">
-              <i className={`bi ${svc.icon}`}></i>
-            </div>
-            <div className="quick-svc-text">
-              <b>{t(svc.titleKey)}</b>
-              <span>{t(svc.subKey)}</span>
-            </div>
-            <i className="bi bi-arrow-right quick-svc-arrow" aria-hidden="true"></i>
-          </button>
-        ))}
-      </div>
+
     </section>
   );
 }

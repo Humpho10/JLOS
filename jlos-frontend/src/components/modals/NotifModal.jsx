@@ -8,10 +8,6 @@ export default function NotifModal() {
 
   return (
     <ModalShell id="notifModal" title="Notifications">
-      <button type="button" className="notif-item" onClick={() => go('page-track')}>
-        <div className="notif-dot" aria-hidden="true"></div>
-        <div><b>Ticket #JLOS-2931 updated</b><span>ODPP replied to your case perusal request · 2h ago</span></div>
-      </button>
       <button type="button" className="notif-item" onClick={() => go('page-institutions')}>
         <div className="notif-dot" aria-hidden="true"></div>
         <div><b>TAT hearings now bookable online</b><span>Tax Appeals Tribunal added a new service · 1d ago</span></div>
