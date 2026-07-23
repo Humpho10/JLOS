@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { useVoiceInput } from '../hooks/useVoiceInput.js';
+import { stripMarkdown } from '../utils/stripMarkdown.js';
 
 function FileMsg({ msg }) {
   return (
@@ -36,6 +37,7 @@ function ChatMessage({ msg, speakingId, onToggleSpeak }) {
   if (msg.kind === 'user') return <div className="msg user">{msg.text}</div>;
   if (msg.kind === 'bot') {
     const isSpeaking = speakingId === msg.id;
+    const cleanText = stripMarkdown(msg.text);
     return (
       <div className="msg bot">
         <div className="bot-tag">
@@ -46,7 +48,7 @@ function ChatMessage({ msg, speakingId, onToggleSpeak }) {
             title={isSpeaking ? 'Stop reading this reply aloud' : 'Read this reply aloud'}
             aria-label={isSpeaking ? 'Stop reading this reply aloud' : 'Read this reply aloud'}
             aria-pressed={isSpeaking}
-            onClick={() => onToggleSpeak(msg.id, msg.text)}
+            onClick={() => onToggleSpeak(msg.id, cleanText)}
           >
             {isSpeaking ? (
               <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -59,7 +61,7 @@ function ChatMessage({ msg, speakingId, onToggleSpeak }) {
             )}
           </button>
         </div>
-        {msg.text}
+        {cleanText}
       </div>
     );
   }
