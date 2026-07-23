@@ -74,6 +74,13 @@ async function streamChat(path, message, { onDelta, onError }) {
   }
 }
 
+// Streams a reply from the general, institution-agnostic chat endpoint.
+// Returns a promise so callers can .catch()/.finally() around the whole
+// exchange, while onDelta/onError report progress as it happens.
+export function sendMessageStream(message, { onDelta, onError }) {
+  return streamChat('/api/chat/stream', message, { onDelta, onError });
+}
+
 // Reads an attached image/PDF and returns a short description of it — the
 // caller drops that into the chat input the same way it does a voice
 // transcript, before it goes through the normal search-and-answer flow.

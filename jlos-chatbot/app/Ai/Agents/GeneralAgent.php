@@ -15,8 +15,12 @@ class GeneralAgent implements Agent, HasTools
 
     public function maxSteps(): int
     {
-        // One step to call the search tool, one to compose the final answer.
-        return 2;
+        // Usually just one search + one answer, but the model sometimes needs
+        // a second search round (a refined query) before it's ready to answer.
+        // If that second tool call lands on the final allowed step, the
+        // framework refuses to execute it and the reply comes back empty —
+        // so budget extra steps rather than assuming the ideal-case count.
+        return 4;
     }
 
     public function instructions(): string
