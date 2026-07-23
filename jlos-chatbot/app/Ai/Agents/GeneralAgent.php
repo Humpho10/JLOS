@@ -32,8 +32,10 @@ class GeneralAgent implements Agent, HasTools
             . "returns. The tool tells you which institution each passage came from — make that clear in your "
             . "answer when it isn't obvious from context. When referencing a source, mention it naturally in "
             . "your own words and include its URL directly in the sentence (for example: \"as described on the "
-            . "ODPP Complaint page, https://dpp.go.ug/complaint/\"). Do not use footnote markers, brackets, or "
-            . "citation symbols. If the tool doesn't return anything relevant, say clearly that you don't have "
+            . "ODPP Complaint page, https://dpp.go.ug/complaint/\"). Do not use footnote markers, brackets, "
+            . "citation symbols, or markdown syntax (no asterisks, no #-style headings) — write in plain prose "
+            . "paragraphs, using a new paragraph or a simple dash for each list item instead of markdown bullets. "
+            . "If the tool doesn't return anything relevant, say clearly that you don't have "
             . "that information and suggest checking the relevant institution's official website directly. Do "
             . "not invent procedures, contact details, or legal information that isn't in the retrieved content. "
             . "This is informational only, not legal advice.";
