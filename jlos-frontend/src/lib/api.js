@@ -69,3 +69,56 @@ export async function sendMessage(message) {
 
   return data.reply;
 }
+
+// Streaming variant of sendMessage() — reads the reply as Server-Sent
+// Events and reports each text chunk as it arrives via onDelta, instead of
+// waiting for the whole reply before returning anything.
+export async function sendMessageStream(message, { onDelta, onError }) {
+  let res;
+  try {
+    res = await fetch(`${API_URL}/api/chat/stream`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
+      body: JSON.stringify({ message }),
+    });
+  } catch {
+    onError("Can't reach the assistant right now — check that the API server is running.");
+    return;
+  }
+
+  if (!res.ok || !res.body) {
+    onError('Something went wrong. Please try again.');
+    return;
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) return;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    let sepIndex;
+    while ((sepIndex = buffer.indexOf('\n\n')) !== -1) {
+      const frame = buffer.slice(0, sepIndex);
+      buffer = buffer.slice(sepIndex + 2);
+
+      const dataLine = frame.split('\n').find((line) => line.startsWith('data: '));
+      if (!dataLine) continue;
+
+      let payload;
+      try {
+        payload = JSON.parse(dataLine.slice(6));
+      } catch {
+        continue;
+      }
+
+      if (payload.type === 'delta') onDelta(payload.text);
+      else if (payload.type === 'error') onError(payload.message);
+      else if (payload.type === 'done') return;
+    }
+  }
+}

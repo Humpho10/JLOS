@@ -15,6 +15,7 @@ class EmbedInstitutionPages extends Command
 
     protected int $chunkSize = 200; // words per chunk
     protected int $overlap = 50;    // words shared between consecutive chunks
+    protected int $embedBatchSize = 100; // Gemini's BatchEmbedContents cap per request
 
     public function handle(): int
     {
@@ -34,6 +35,11 @@ class EmbedInstitutionPages extends Command
         }
 
         foreach ($pages as $page) {
+            if ($page->embedded_hash !== null && $page->embedded_hash === $page->content_hash) {
+                $this->info("Skipping \"{$page->title}\" (already embedded, unchanged).");
+                continue;
+            }
+
             $this->info("Chunking \"{$page->title}\"...");
 
             $chunkTexts = $this->chunkText($page->cleaned_text);
@@ -45,7 +51,15 @@ class EmbedInstitutionPages extends Command
 
             $this->info('  Split into '.count($chunkTexts).' chunk(s), generating embeddings...');
 
-            $embeddings = Embeddings::for($chunkTexts)->dimensions(768)->generate()->embeddings;
+            try {
+                $embeddings = [];
+                foreach (array_chunk($chunkTexts, $this->embedBatchSize) as $batch) {
+                    array_push($embeddings, ...Embeddings::for($batch)->dimensions(768)->generate()->embeddings);
+                }
+            } catch (\Throwable $e) {
+                $this->warn("  Could not generate embeddings ({$e->getMessage()}), skipping page.");
+                continue;
+            }
 
             // Replace existing chunks so re-runs don't create duplicates.
             $page->chunks()->delete();
@@ -59,6 +73,8 @@ class EmbedInstitutionPages extends Command
                     'embedding' => json_encode($embeddings[$index], JSON_THROW_ON_ERROR),
                 ]);
             }
+
+            $page->update(['embedded_hash' => $page->content_hash]);
 
             $this->info('  Saved '.count($chunkTexts).' chunk(s) with embeddings.');
         }

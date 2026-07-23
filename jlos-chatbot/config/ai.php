@@ -96,6 +96,15 @@ return [
             'driver' => 'gemini',
             'key' => env('GEMINI_API_KEY'),
             'url' => env('GEMINI_URL', 'https://generativelanguage.googleapis.com/v1beta/'),
+            'models' => [
+                // The package's built-in fallback (gemini-3.5-flash) has been hitting
+                // 503 "high demand" errors; gemini-flash-latest is Google's alias for
+                // whichever current stable flash model they recommend, so it won't
+                // go stale the way a pinned version number eventually does.
+                'text' => [
+                    'default' => env('GEMINI_TEXT_MODEL', 'gemini-flash-latest'),
+                ],
+            ],
         ],
 
         'groq' => [

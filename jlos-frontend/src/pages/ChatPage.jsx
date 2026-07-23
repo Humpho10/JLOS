@@ -1,17 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { useVoiceInput } from '../hooks/useVoiceInput.js';
-
-// Read a message aloud with the browser's built-in speech synthesis —
-// this is the "response" half of voice chat (the mic below handles input).
-function speak(text) {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.rate = 1;
-  utter.pitch = 1;
-  window.speechSynthesis.speak(utter);
-}
 
 function FileMsg({ msg }) {
   return (
@@ -33,7 +22,7 @@ function FileMsg({ msg }) {
   );
 }
 
-function ChatMessage({ msg }) {
+function ChatMessage({ msg, speakingId, onToggleSpeak }) {
   if (msg.kind === 'typing') {
     return (
       <div className="msg bot typing-wrap">
@@ -46,14 +35,28 @@ function ChatMessage({ msg }) {
   if (msg.kind === 'file-msg') return <FileMsg msg={msg} />;
   if (msg.kind === 'user') return <div className="msg user">{msg.text}</div>;
   if (msg.kind === 'bot') {
+    const isSpeaking = speakingId === msg.id;
     return (
       <div className="msg bot">
         <div className="bot-tag">
           <div className="av">{msg.avatar || '⚖️'}</div><b>{msg.name || 'Justice AI'}</b>
-          <button type="button" className="speak-btn" title="Read this reply aloud" onClick={() => speak(msg.text)}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" />
-            </svg>
+          <button
+            type="button"
+            className={`speak-btn ${isSpeaking ? 'speaking' : ''}`}
+            title={isSpeaking ? 'Stop reading this reply aloud' : 'Read this reply aloud'}
+            aria-label={isSpeaking ? 'Stop reading this reply aloud' : 'Read this reply aloud'}
+            aria-pressed={isSpeaking}
+            onClick={() => onToggleSpeak(msg.id, msg.text)}
+          >
+            {isSpeaking ? (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+            ) : (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M11 5L6 9H2v6h4l5 4V5z" /><path d="M15.5 8.5a5 5 0 0 1 0 7M19 5a10 10 0 0 1 0 14" />
+              </svg>
+            )}
           </button>
         </div>
         {msg.text}
@@ -67,12 +70,54 @@ export default function ChatPage({ active }) {
   const { chat, pushToast, t } = useApp();
   const bodyRef = useRef(null);
   const fileInputRef = useRef(null);
+  const inputRef = useRef(null);
+  const [speakingId, setSpeakingId] = useState(null);
 
   useEffect(() => {
     if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
   }, [chat.messages]);
 
+  // Auto-grow the compose box as the user types, up to a max height
+  // enforced in CSS (past which it scrolls internally instead of growing).
+  // Other pages stay mounted (just CSS-hidden) while inactive, so scrollHeight
+  // can read 0 here — only commit a real measurement, never a bogus 0px.
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    if (el.scrollHeight > 0) {
+      el.style.height = `${el.scrollHeight}px`;
+    }
+  }, [chat.chatInput]);
+
+  const toggleSpeak = useCallback((id, text) => {
+    if (typeof window === 'undefined' || !window.speechSynthesis) return;
+
+    if (speakingId === id) {
+      window.speechSynthesis.cancel();
+      setSpeakingId(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 1;
+    utter.pitch = 1;
+    utter.onend = () => setSpeakingId(null);
+    utter.onerror = () => setSpeakingId(null);
+    window.speechSynthesis.speak(utter);
+    setSpeakingId(id);
+  }, [speakingId]);
+
+  // Stop any speech synthesis in progress if the page is left mid-playback.
+  useEffect(() => () => {
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+  }, []);
+
   const { listening, toggle: toggleVoiceInput } = useVoiceInput({
+    onInterimResult: (transcript) => chat.setChatInput(transcript),
     onResult: (transcript) => {
       chat.setChatInput(transcript);
       setTimeout(() => chat.runChatDemo(transcript), 300);
@@ -83,7 +128,7 @@ export default function ChatPage({ active }) {
 
   return (
     <section className={`page ${active ? 'active' : ''}`} id="page-chat">
-      <div className="page-wrap">
+      <div className="page-wrap chat-page-wrap">
         <div className="page-head">
           <h2>{t('page.chat.title')}</h2>
           <p>{t('page.chat.sub')}</p>
@@ -99,7 +144,9 @@ export default function ChatPage({ active }) {
             </div>
           </div>
           <div className="chat-panel-body" id="chatBodyWeb" ref={bodyRef} role="log" aria-live="polite" aria-label="Conversation">
-            {chat.messages.map((m) => <ChatMessage msg={m} key={m.id} />)}
+            {chat.messages.map((m) => (
+              <ChatMessage msg={m} key={m.id} speakingId={speakingId} onToggleSpeak={toggleSpeak} />
+            ))}
           </div>
           <div className="chat-panel-input">
             <input
@@ -116,13 +163,14 @@ export default function ChatPage({ active }) {
             <button type="button" className="attach-btn" title="Attach a file" aria-label="Attach a file" onClick={() => fileInputRef.current && fileInputRef.current.click()}>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.19 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>
             </button>
-            <input
+            <textarea
               id="chatInputWeb"
+              ref={inputRef}
+              rows={1}
               aria-label="Type your message"
               placeholder={listening ? 'Listening…' : 'Type your problem here...'}
               value={chat.chatInput}
               onChange={(e) => chat.setChatInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') chat.runChatDemo(); }}
             />
             <button
               type="button"

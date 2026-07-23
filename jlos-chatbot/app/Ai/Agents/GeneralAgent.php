@@ -15,7 +15,8 @@ class GeneralAgent implements Agent, HasTools
 
     public function maxSteps(): int
     {
-        return 4;
+        // One step to call the search tool, one to compose the final answer.
+        return 2;
     }
 
     public function instructions(): string

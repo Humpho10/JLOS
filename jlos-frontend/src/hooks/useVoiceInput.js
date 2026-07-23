@@ -8,7 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 // input the same way.
 // ============================================================
 
-export function useVoiceInput({ onResult, onNoSupport, onError, lang = 'en-US' } = {}) {
+export function useVoiceInput({ onResult, onInterimResult, onNoSupport, onError, lang = 'en-US' } = {}) {
   const recognitionRef = useRef(null);
   const [listening, setListening] = useState(false);
 
@@ -31,7 +31,7 @@ export function useVoiceInput({ onResult, onNoSupport, onError, lang = 'en-US' }
 
     const recognition = new SpeechRecognition();
     recognition.lang = lang;
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.maxAlternatives = 1;
     recognition.onstart = () => setListening(true);
     recognition.onend = () => setListening(false);
@@ -40,12 +40,23 @@ export function useVoiceInput({ onResult, onNoSupport, onError, lang = 'en-US' }
       onError && onError();
     };
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      onResult && onResult(transcript);
+      let transcript = '';
+      let isFinal = false;
+
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+        if (event.results[i].isFinal) isFinal = true;
+      }
+
+      if (isFinal) {
+        onResult && onResult(transcript);
+      } else {
+        onInterimResult && onInterimResult(transcript);
+      }
     };
     recognitionRef.current = recognition;
     recognition.start();
-  }, [listening, onResult, onNoSupport, onError, lang]);
+  }, [listening, onResult, onInterimResult, onNoSupport, onError, lang]);
 
   return { listening, toggle };
 }

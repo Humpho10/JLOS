@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ScrapedPage extends Model
 {
-    protected $fillable = ['institution_id', 'url', 'title', 'content_type', 'cleaned_text', 'content_hash', 'last_scraped_at'];
+    protected $fillable = ['institution_id', 'url', 'title', 'content_type', 'cleaned_text', 'content_hash', 'embedded_hash', 'last_scraped_at'];
 
 public function institution()
 {
