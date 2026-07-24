@@ -120,7 +120,7 @@ export default function HomePage({ active }) {
               </button>
             </div>
 
-            <div className="hero-or-divider"><span>{t('hero.or')}</span></div>
+            {/* <div className="hero-or-divider"><span>{t('hero.or')}</span></div>
 
             <div className="hero-option-row">
               <button type="button" className="hero-option-card" onClick={() => goToPage('page-chat')}>
@@ -130,7 +130,7 @@ export default function HomePage({ active }) {
                   <span>{t('hero.getInstantAnswers')}</span>
                 </div>
               </button>
-            </div>
+            </div> */}
           </TiltCard>
         </div>
       </div>

@@ -61,7 +61,7 @@ export default function Navbar() {
               <i className={`bi ${isDark ? 'bi-moon-stars-fill' : 'bi-sun-fill'}`} aria-hidden="true"></i>
             </span>
           </button>
-          <button
+          {/* <button
             type="button"
             className="nav-icon-btn"
             onClick={() => openModal('notifModal')}
@@ -70,7 +70,7 @@ export default function Navbar() {
           >
             <i className="bi bi-bell-fill" aria-hidden="true"></i>
             <span className="nav-badge-count" aria-hidden="true">3</span>
-          </button>
+          </button> */}
           <button
             type="button"
             className="nav-lang-btn"
