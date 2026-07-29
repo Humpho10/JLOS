@@ -3,7 +3,7 @@
   "configurations": [
     {
       "name": "jlos-frontend",
-      "url": "http://localhost:5175"
+      "url": "http://localhost:5174"
     }
   ]
 }

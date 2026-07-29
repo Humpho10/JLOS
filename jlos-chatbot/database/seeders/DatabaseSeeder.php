@@ -23,5 +23,15 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(InstitutionSeeder::class);
+        $this->call(InstitutionPageSeeder::class);
+
+        User::updateOrCreate(
+            ['email' => 'superadmin@jlos.test'],
+            [
+                'name' => 'Super Admin',
+                'password' => 'password',
+                'role' => 'super_admin',
+            ]
+        );
     }
 }

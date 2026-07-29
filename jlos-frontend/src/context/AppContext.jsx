@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { translations } from '../i18n/translations.js';
-import { fetchInstitutions, sendMessageStream, interpretAttachment, ApiError } from '../lib/api.js';
+import { fetchInstitutions, sendMessageStream, sendInstitutionContactMessage, interpretAttachment, ApiError } from '../lib/api.js';
 
 // ============================================================
 // Central app state — navigation, theme, modals, toasts,
@@ -281,24 +281,39 @@ export function AppProvider({ children }) {
   }, [generalChat, pushToast]);
 
   // ---------- institution contact page ----------
-  // This is a "message this institution" channel, not the AI — sending a
-  // message here doesn't call the AI backend at all. There's no real
-  // ticketing/email backend yet, so delivery is simulated locally: the
-  // message is captured, and a canned confirmation is shown after a short
-  // delay to make the wait feel real.
+  // This is a "message this institution" channel, not the AI. Institutions
+  // with a `chatSlug` have a matching backend Institution row, so the
+  // message is really persisted (see InstitutionContactController) and an
+  // institution admin can see and reply to it. Institutions without one
+  // (most of the 8 are frontend-only placeholders today) have no backend
+  // row to attach a message to, so they keep the phone-only fallback.
   const [activeInstitution, setActiveInstitution] = useState(null);
 
-  const contactStreamFn = useCallback((text, { onDelta }) => {
+  const contactStreamFn = useCallback((text, { onDelta, onError }) => {
     const inst = activeInstitution;
-    return new Promise((resolve) => {
-      setTimeout(() => {
+
+    if (!inst?.chatSlug) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          onDelta(
+            `${inst?.short || inst?.name} doesn't take messages through this portal yet. `
+            + `Please call ${inst?.phone} to reach them directly.`
+          );
+          resolve();
+        }, 500);
+      });
+    }
+
+    return sendInstitutionContactMessage(inst.chatSlug, { body: text })
+      .then(() => {
         onDelta(
-          `Thanks — your message has been sent to ${inst?.short || inst?.name}. `
-          + `They typically respond within 1–2 business days. If it's urgent, call ${inst?.phone}.`
+          `Thanks — your message has been sent to ${inst.short || inst.name}. `
+          + `They typically respond within 1–2 business days. If it's urgent, call ${inst.phone}.`
         );
-        resolve();
-      }, 900);
-    });
+      })
+      .catch((err) => {
+        onError(err instanceof ApiError ? err.message : 'Could not send your message. Please try again.');
+      });
   }, [activeInstitution]);
 
   const institutionChat = useChatSession({

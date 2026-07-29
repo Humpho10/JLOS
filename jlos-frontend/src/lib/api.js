@@ -2,7 +2,7 @@
 // Thin client for the jlos-chatbot Laravel API.
 // ============================================================
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export class ApiError extends Error {
   constructor(message, status) {
@@ -18,6 +18,31 @@ export async function fetchInstitutions() {
   });
   if (!res.ok) throw new ApiError('Could not load institutions.', res.status);
   return res.json();
+}
+
+// Sends a "message this institution" contact-form submission to the real
+// backend inbox (see InstitutionContactController). Only institutions with
+// a `chatSlug` have a matching backend Institution row this can target.
+export async function sendInstitutionContactMessage(slug, { name, email, body }) {
+  let res;
+  try {
+    res = await fetch(`${API_URL}/api/institutions/${slug}/contact`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+      body: JSON.stringify({ name, email, body }),
+    });
+  } catch {
+    throw new ApiError("Can't reach the server right now — check that the API server is running.", 0);
+  }
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    const firstError = data?.errors ? Object.values(data.errors)[0]?.[0] : null;
+    throw new ApiError(firstError || data?.message || 'Could not send your message. Please try again.', res.status);
+  }
+
+  return data;
 }
 
 // Reads a chat reply as Server-Sent Events, reporting each text chunk as it

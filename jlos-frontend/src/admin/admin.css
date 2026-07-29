@@ -1,0 +1,34 @@
+/* Tailwind utilities only — no Preflight. This file is imported solely by
+   the admin bundle (AdminApp.jsx), but since Vite/React never unmounts a
+   loaded stylesheet, once a session visits /admin this CSS stays active for
+   the rest of the page — Preflight's global element resets would otherwise
+   leak into and clash with the public site's own hand-built design system. */
+@import "tailwindcss/theme.css";
+@import "tailwindcss/utilities.css";
+
+@theme {
+  --color-brand-navy: #0e2a47;
+  --color-brand-navy-2: #123a61;
+  --color-brand-navy-3: #1b4b7a;
+  --color-brand-gold: #c79a2e;
+  --color-brand-gold-2: #e4bb52;
+  --color-brand-maroon: #7c2333;
+  --color-brand-bg: #f6f4ee;
+  --color-brand-card: #ffffff;
+  --color-brand-text: #1b2430;
+  --color-brand-muted: #6b7480;
+  --color-brand-line: #e7e3d8;
+  --color-brand-success: #1f8a57;
+  --color-brand-success-bg: #eaf6f0;
+  --color-brand-warn: #b4791a;
+  --color-brand-danger: #b3261e;
+  --color-brand-danger-bg: #fbeaea;
+}
+
+/* Scoped to .admin-shell so it never touches the public site even though
+   the stylesheet stays loaded after leaving /admin. */
+.admin-shell {
+  min-height: 100vh;
+  background: var(--color-brand-bg);
+  color: var(--color-brand-text);
+}
