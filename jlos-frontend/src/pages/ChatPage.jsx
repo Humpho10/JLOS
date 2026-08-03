@@ -69,7 +69,7 @@ function ChatMessage({ msg, speakingId, onToggleSpeak }) {
 }
 
 export default function ChatPage({ active }) {
-  const { chat, pushToast, t } = useApp();
+  const { chat, pushToast, t, user, handleResendVerification } = useApp();
   const bodyRef = useRef(null);
   const fileInputRef = useRef(null);
   const inputRef = useRef(null);
@@ -142,6 +142,12 @@ export default function ChatPage({ active }) {
               <p id="chatStatusWeb" role="status" aria-live="polite">{chat.chatStatus}</p>
             </div>
           </div>
+          {user && !user.email_verified_at && (
+            <div className="verify-banner" role="status">
+              <span>Verify your email to secure your account — check your inbox for the link.</span>
+              <button type="button" onClick={handleResendVerification}>Resend</button>
+            </div>
+          )}
           <div className="chat-panel-body" id="chatBodyWeb" ref={bodyRef} role="log" aria-live="polite" aria-label="Conversation">
             {chat.messages.map((m) => (
               <ChatMessage msg={m} key={m.id} speakingId={speakingId} onToggleSpeak={toggleSpeak} />

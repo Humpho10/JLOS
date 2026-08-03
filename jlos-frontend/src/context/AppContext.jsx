@@ -1,6 +1,8 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { translations } from '../i18n/translations.js';
-import { fetchInstitutions, sendMessageStream, interpretAttachment, ApiError } from '../lib/api.js';
+import { fetchInstitutions, fetchCurrentConversation, sendMessageStream, interpretAttachment, ApiError } from '../lib/api.js';
+import { getGuestToken } from '../lib/guestToken.js';
+import { fetchMe, register, login, logout, resendVerification } from '../lib/auth.js';
 
 // ============================================================
 // Central app state — navigation, theme, modals, toasts,
@@ -41,6 +43,16 @@ function formatSize(bytes) {
   return (kb / 1024).toFixed(1) + ' MB';
 }
 
+// Turns persisted {role, content} rows back into the shape the chat UI
+// already renders, so restored history looks identical to a live reply.
+function historyToMessages(rawMessages) {
+  return rawMessages.map((m) => (
+    m.role === 'user'
+      ? { kind: 'user', text: m.content }
+      : { kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: m.content }
+  ));
+}
+
 // ------------------------------------------------------------
 // useChatSession — shared engine behind both the general Justice
 // AI chat and the per-institution "contact" chat. Owns messages,
@@ -58,10 +70,15 @@ function useChatSession({
   typingStatus = '● Justice AI is typing...',
   idleStatus = '● Online — usually replies instantly',
   getBotMeta,
+  guestToken,
 }) {
   const [messages, setMessages] = useState(initial);
   const [status, setStatus] = useState(idleStatus);
   const [input, setInput] = useState('');
+  // Which persisted conversation this session is continuing — null until
+  // either restored history is hydrated in, or the first reply comes back
+  // carrying the ID of the conversation the backend just created.
+  const [conversationId, setConversationId] = useState(null);
 
   const resolveBotMeta = useCallback(
     () => (getBotMeta ? getBotMeta() : { name: 'Justice AI', avatar: '⚖️' }),
@@ -87,6 +104,13 @@ function useChatSession({
     setInput('');
   }, [idleStatus]);
 
+  // Replaces the canned greeting with real restored history on page load —
+  // unlike reset(), this also remembers which conversation to keep appending to.
+  const hydrate = useCallback((msgs, convId) => {
+    setMessages(msgs.map((m) => ({ id: nextId(), ...m })));
+    setConversationId(convId);
+  }, []);
+
   // `overrideText`, when given, is used instead of the current `input`
   // state — needed by findService()/handleFileAttach(), which set the
   // input and immediately send it in the same tick (before React
@@ -109,6 +133,9 @@ function useChatSession({
     let messageShown = false;
 
     streamFn(text, {
+      conversationId,
+      guestToken,
+      onConversationId: setConversationId,
       onDelta: (chunk) => {
         messageShown = true;
         if (botMessageId === null) {
@@ -147,13 +174,13 @@ function useChatSession({
         }
         setStatus(idleStatus);
       });
-  }, [input, streamFn, resolveBotMeta, addMessage, addTyping, removeTyping, appendToMessage, typingStatus, idleStatus]);
+  }, [input, streamFn, resolveBotMeta, addMessage, addTyping, removeTyping, appendToMessage, typingStatus, idleStatus, conversationId, guestToken]);
 
   return {
     messages, status, setStatus,
     input, setInput,
     addMessage, addTyping, removeTyping, appendToMessage,
-    run, reset,
+    run, reset, hydrate,
   };
 }
 
@@ -194,6 +221,19 @@ export function AppProvider({ children }) {
     }, 2850);
   }, []);
 
+  // The verification email link redirects here with ?verified=1/0 once the
+  // backend has processed it — surface that as a toast, then drop the param
+  // so a refresh doesn't repeat it.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has('verified')) return;
+    pushToast(params.get('verified') === '1' ? 'Email verified — thank you!' : 'That verification link is invalid or expired.');
+    params.delete('verified');
+    const rest = params.toString();
+    window.history.replaceState({}, '', window.location.pathname + (rest ? `?${rest}` : ''));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // ---------- language ----------
   const [language, setLanguageState] = useState('English');
   const setLanguage = useCallback((name) => {
@@ -214,9 +254,14 @@ export function AppProvider({ children }) {
   }, [language]);
 
   // ---------- general Justice AI chat ----------
+  // Guests get a random token on first visit, kept in localStorage, so a
+  // refresh can be matched back to the same conversation without an account.
+  const [guestToken] = useState(() => getGuestToken());
+
   const generalChat = useChatSession({
     streamFn: sendMessageStream,
     initialMessages: initialMessages(),
+    guestToken,
   });
 
   // On load, just confirm the backend is reachable.
@@ -231,6 +276,62 @@ export function AppProvider({ children }) {
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // ---------- account ----------
+  const [user, setUser] = useState(null);
+
+  // Check for an existing signed-in session on load (a token left over in
+  // localStorage from a previous visit).
+  useEffect(() => {
+    let cancelled = false;
+    fetchMe().then((u) => { if (!cancelled) setUser(u); });
+    return () => { cancelled = true; };
+  }, []);
+
+  const handleRegister = useCallback(async (form) => {
+    const u = await register(form);
+    setUser(u);
+    pushToast(`Welcome, ${u.name}! Check your email to verify your account.`);
+  }, [pushToast]);
+
+  const handleLogin = useCallback(async (form) => {
+    const u = await login(form);
+    setUser(u);
+    pushToast(`Welcome back, ${u.name}.`);
+  }, [pushToast]);
+
+  const handleLogout = useCallback(async () => {
+    await logout();
+    setUser(null);
+    pushToast('Signed out.');
+  }, [pushToast]);
+
+  const handleResendVerification = useCallback(() => {
+    resendVerification()
+      .then(() => pushToast('Verification email sent — check your inbox.'))
+      .catch(() => pushToast('Could not send that right now. Please try again.'));
+  }, [pushToast]);
+
+  // Restore the signed-in-user's or guest's last conversation, so a refresh
+  // (or a login, which switches identity from guest_token to user_id) picks
+  // up the right history instead of always starting fresh.
+  useEffect(() => {
+    let cancelled = false;
+    fetchCurrentConversation(guestToken)
+      .then((data) => {
+        if (cancelled || !data.conversation_id || !data.messages?.length) return;
+        generalChat.hydrate(
+          [
+            { kind: 'system', text: 'Chat started · English · Connected to Justice AI' },
+            ...historyToMessages(data.messages),
+          ],
+          data.conversation_id
+        );
+      })
+      .catch(() => { /* no history yet, or unreachable — already toasted above */ });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [guestToken, user]);
 
   const startChat = useCallback((text) => {
     goToPage('page-chat');
@@ -349,6 +450,7 @@ export function AppProvider({ children }) {
       run: institutionChat.run,
     },
     focusInstitutionCode, goToInstitution,
+    user, handleRegister, handleLogin, handleLogout, handleResendVerification,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

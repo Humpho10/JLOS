@@ -33,7 +33,11 @@ export const translations = {
   'hero.stat.freeSuffix': { English: 'To Use', Luganda: 'Okukozesa', Kiswahili: 'Kutumia', Ateso: 'Aitum' },
   'hero.or': { English: 'OR', Luganda: 'OBA', Kiswahili: 'AU', Ateso: 'KOSI' },
   'hero.chatWithAi': { English: 'Chat with Justice AI', Luganda: 'Yogera ne Justice AI', Kiswahili: 'Ongea na Justice AI', Ateso: 'Lokuta ka Justice AI' },
-  'hero.heading': { English: 'Justice starts here.', Luganda: 'Obwenkanya butandikira wano.', Kiswahili: 'Haki huanzia hapa.', Ateso: 'Ainakiyar akitakanut kane.' },
+  // Split into 3 parts (rather than one string) so the two-tone white/gold/
+  // white heading styling still works in every language, not just English.
+  'hero.heading.part1': { English: 'Justice', Luganda: 'Obwenkanya', Kiswahili: 'Haki', Ateso: 'Ainakiyar' },
+  'hero.heading.highlight': { English: 'starts', Luganda: 'butandikira', Kiswahili: 'huanzia', Ateso: 'akitakanut' },
+  'hero.heading.part2': { English: 'here.', Luganda: 'wano.', Kiswahili: 'hapa.', Ateso: 'kane.' },
   'hero.sub': {
     English: "Describe your issue and we'll connect you to the correct JLOS institution.",
     Luganda: 'Nnyonnyola ekizibu kyo tulikuyunga ku kibiina kya JLOS ekituufu.',

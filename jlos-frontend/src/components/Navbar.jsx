@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { NAV_ITEMS } from '../data/navItems.js';
 
+//const is a standard JavaScript keyword used to declare block-scoped variables whose references cannot be reassigned
+
 const LANG_CODES = { English: 'EN', Luganda: 'LG', Kiswahili: 'SW', Ateso: 'AT' };
 
 export default function Navbar() {
-  const { activePage, goToPage, isDark, toggleTheme, openModal, language, t } = useApp();
+  const { activePage, goToPage, isDark, toggleTheme, openModal, language, t, user, handleLogout } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const go = (id) => {
@@ -17,10 +19,10 @@ export default function Navbar() {
     <>
       <nav className="navbar" aria-label="Primary">
         <div className="nav-left">
-          <div className="brand-cluster-web">
+          <button type="button" className="brand-cluster-web" onClick={() => goToPage('page-home')} aria-label="JLOS Justice Portal — go to homepage">
             <div className="brand-chip-web">
               <img
-                src="/resources/images/jlos-logo.png"
+                src="/resources/images/JLOS-logo.png"
                 alt="JLOS — Justice, Law and Order Sector"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
@@ -28,11 +30,11 @@ export default function Navbar() {
                 }}
               />
             </div>
-          </div>
-          <div className="nav-title">
-            JLOS Justice Portal
-            <span>{t('nav.tagline')}</span>
-          </div>
+            <div className="nav-title">
+              JLOS Justice Portal
+              <span>{t('nav.tagline')}</span>
+            </div>
+          </button>
           <div className="nav-links" id="navLinks">
             {NAV_ITEMS.map((item) => (
               <button
@@ -92,10 +94,21 @@ export default function Navbar() {
           >
             <i className="bi bi-list" aria-hidden="true"></i>
           </button>
+          {user ? (
+            <button type="button" className="nav-lang-btn" onClick={handleLogout} aria-label={`Signed in as ${user.name} — sign out`}>
+              <i className="bi bi-person-check-fill" aria-hidden="true"></i>
+              <span>{user.name.split(' ')[0]}</span>
+            </button>
+          ) : (
+            <button type="button" className="nav-lang-btn" onClick={() => openModal('authModal')} aria-haspopup="dialog" aria-label="Sign in or create an account">
+              <i className="bi bi-person-fill" aria-hidden="true"></i>
+              <span>Sign in</span>
+            </button>
+          )}
           <div className="coa-chip-web" title="Coat of Arms of Uganda">
             <img
-              src="https://commons.wikimedia.org/wiki/Special:FilePath/Coat_of_arms_of_Uganda.svg"
-              alt="Coat of Arms of Uganda"
+              src="/resources/images/JLOS-logo.png"
+              alt="JLOS Justice Portal"
               onError={(e) => { e.currentTarget.parentElement.style.display = 'none'; }}
             />
           </div>
