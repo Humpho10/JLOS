@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Ai\Agents\AttachmentInterpreterAgent;
 use App\Ai\Agents\GeneralAgent;
+use App\Http\Controllers\Concerns\ManagesConversations;
 use Illuminate\Http\Request;
 use Laravel\Ai\Exceptions\ProviderOverloadedException;
 use Laravel\Ai\Exceptions\RateLimitedException;
@@ -14,6 +15,8 @@ use Throwable;
 
 class ChatController extends Controller
 {
+    use ManagesConversations;
+
     /**
      * Same as chat(), but streams the reply as Server-Sent Events so the
      * frontend can render tokens as they arrive instead of waiting for the
@@ -23,14 +26,26 @@ class ChatController extends Controller
     {
         $request->validate([
             'message' => 'required|string|max:500',
+            'conversation_id' => 'nullable|integer',
+            'guest_token' => 'nullable|string',
         ]);
 
+        $conversation = $this->resolveConversation($request);
         $message = $request->input('message');
+        $this->recordMessage($conversation, 'user', $message);
+        $prompt = $this->historyText($conversation)."New question: {$message}";
 
-        return response()->stream(function () use ($message) {
+        return response()->stream(function () use ($conversation, $prompt) {
+            // Sent first so the frontend can remember the ID before any
+            // text arrives — needed on a brand-new conversation's first message.
+            $this->emit(['type' => 'conversation', 'id' => $conversation->id]);
+
+            $fullReply = '';
+
             try {
-                foreach ((new GeneralAgent)->stream($message) as $event) {
+                foreach ((new GeneralAgent)->stream($prompt) as $event) {
                     if ($event instanceof TextDelta) {
+                        $fullReply .= $event->delta;
                         $this->emit(['type' => 'delta', 'text' => $event->delta]);
                     } elseif ($event instanceof AiStreamError) {
                         $this->emit(['type' => 'error', 'message' => 'The AI provider had a problem generating a reply. Please try again.']);
@@ -43,6 +58,12 @@ class ChatController extends Controller
             } catch (Throwable $e) {
                 report($e);
                 $this->emit(['type' => 'error', 'message' => 'Something went wrong. Please try again.']);
+            }
+
+            // Only save if something was actually generated — an error-only
+            // run shouldn't leave a blank assistant message in history.
+            if ($fullReply !== '') {
+                $this->recordMessage($conversation, 'assistant', $fullReply);
             }
 
             $this->emit(['type' => 'done']);
@@ -68,32 +89,46 @@ class ChatController extends Controller
     {
         $request->validate([
             'message' => 'required|string|max:500',
+            'conversation_id' => 'nullable|integer',
+            'guest_token' => 'nullable|string',
         ]);
 
+        $conversation = $this->resolveConversation($request);
+        $message = $request->input('message');
+        $this->recordMessage($conversation, 'user', $message);
+        $prompt = $this->historyText($conversation)."New question: {$message}";
+
         try {
-            $response = (new GeneralAgent)->prompt($request->input('message'));
+            $response = (new GeneralAgent)->prompt($prompt);
         } catch (RateLimitedException $e) {
             return response()->json([
-                'message' => $request->input('message'),
+                'conversation_id' => $conversation->id,
+                'message' => $message,
                 'reply' => "I'm getting rate limited by the AI provider right now. Please wait a bit and try again.",
             ], 429);
         } catch (ProviderOverloadedException $e) {
             return response()->json([
-                'message' => $request->input('message'),
+                'conversation_id' => $conversation->id,
+                'message' => $message,
                 'reply' => "The AI provider is temporarily overloaded. Please try again in a moment.",
             ], 503);
         } catch (Throwable $e) {
             report($e);
 
             return response()->json([
-                'message' => $request->input('message'),
+                'conversation_id' => $conversation->id,
+                'message' => $message,
                 'reply' => 'Something went wrong. Please try again.',
             ], 500);
         }
 
+        $reply = $response->text ?: "I couldn't find relevant information for that — try rephrasing your question.";
+        $this->recordMessage($conversation, 'assistant', $reply);
+
         return response()->json([
-            'message' => $request->input('message'),
-            'reply' => $response->text ?: "I couldn't find relevant information for that — try rephrasing your question.",
+            'conversation_id' => $conversation->id,
+            'message' => $message,
+            'reply' => $reply,
         ]);
     }
 

@@ -15,7 +15,7 @@ export default function Footer() {
           <div className="footer-col footer-brand">
             <div className="footer-brand-row">
               <img
-                src="/resources/images/jlos-logo.png"
+                src="/resources/images/JLOS-logo.png"
                 alt="JLOS logo"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
@@ -71,8 +71,8 @@ export default function Footer() {
         <div className="footer-bottom">
           <div className="coa-chip-web" title="Coat of Arms of Uganda">
             <img
-              src="https://commons.wikimedia.org/wiki/Special:FilePath/Coat_of_arms_of_Uganda.svg"
-              alt="Coat of Arms of Uganda"
+              src="/resources/images/JLOS-logo.png"
+              alt="JLOS Justice Portal"
               onError={(e) => { e.currentTarget.parentElement.style.display = 'none'; }}
             />
           </div>
