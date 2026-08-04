@@ -69,13 +69,7 @@ export default function Footer() {
         </div>
 
         <div className="footer-bottom">
-          <div className="coa-chip-web" title="Coat of Arms of Uganda">
-            <img
-              src="/resources/images/JLOS-logo.png"
-              alt="JLOS Justice Portal"
-              onError={(e) => { e.currentTarget.parentElement.style.display = 'none'; }}
-            />
-          </div>
+
           <span>© {year} JLOS Justice Portal · {t('footer.rights')}</span>
         </div>
       </div>

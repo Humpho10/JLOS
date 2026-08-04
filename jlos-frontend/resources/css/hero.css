@@ -77,8 +77,9 @@
     transition:background .15s ease, transform .15s ease;
   }
   .hero-inst-pill:hover{background:rgba(255,255,255,.26); transform:translateY(-1px);}
-  .hero-inst-pill-ic{width:13px; height:13px; display:flex; opacity:.9; flex:none;}
-  .hero-inst-pill-ic svg{width:100%; height:100%;}
+  .hero-inst-pill-ic{width:18px; height:18px; display:flex; align-items:center; justify-content:center; opacity:.95; flex:none; border-radius:50%; background:#fff; overflow:hidden;}
+  .hero-inst-pill-ic svg{width:68%; height:68%;}
+  .hero-inst-pill-ic img{width:100%; height:100%; object-fit:contain;}
 
   /* Trust stats — institutions / support hours / cost, under the pills */
   .hero-stats-row{display:flex; flex-wrap:wrap; gap:22px; margin-top:26px;}

@@ -94,24 +94,7 @@ export default function Navbar() {
           >
             <i className="bi bi-list" aria-hidden="true"></i>
           </button>
-          {user ? (
-            <button type="button" className="nav-lang-btn" onClick={handleLogout} aria-label={`Signed in as ${user.name} — sign out`}>
-              <i className="bi bi-person-check-fill" aria-hidden="true"></i>
-              <span>{user.name.split(' ')[0]}</span>
-            </button>
-          ) : (
-            <button type="button" className="nav-lang-btn" onClick={() => openModal('authModal')} aria-haspopup="dialog" aria-label="Sign in or create an account">
-              <i className="bi bi-person-fill" aria-hidden="true"></i>
-              <span>Sign in</span>
-            </button>
-          )}
-          <div className="coa-chip-web" title="Coat of Arms of Uganda">
-            <img
-              src="/resources/images/JLOS-logo.png"
-              alt="JLOS Justice Portal"
-              onError={(e) => { e.currentTarget.parentElement.style.display = 'none'; }}
-            />
-          </div>
+
         </div>
       </nav>
 

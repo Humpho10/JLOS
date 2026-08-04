@@ -26,7 +26,7 @@ export const translations = {
   },
 
   // ---------- hero ----------
-  'hero.badge': { English: 'One Portal · 8 Institutions · All for You', Luganda: 'Omulyango Gumu · Ebibiina 8 · Byonna gy’oli', Kiswahili: 'Lango Moja · Taasisi 8 · Vyote kwa Ajili Yako', Ateso: 'Ekot Alomit · Ijo 8 · Ijo Kesi' },
+  'hero.badge': { English: 'One Portal · 5 Institutions · All for You', Luganda: 'Omulyango Gumu · Ebibiina 5 · Byonna gy’oli', Kiswahili: 'Lango Moja · Taasisi 5 · Vyote kwa Ajili Yako', Ateso: 'Ekot Alomit · Ijo 5 · Ijo Kesi' },
   'hero.stat.institutions': { English: 'Institutions', Luganda: 'Ebibiina', Kiswahili: 'Taasisi', Ateso: 'Ijo' },
   'hero.stat.support': { English: 'Support', Luganda: 'Obuyambi', Kiswahili: 'Msaada', Ateso: 'Iyupun' },
   'hero.stat.free': { English: 'Free', Luganda: 'Ya Bwerere', Kiswahili: 'Bure', Ateso: 'Mam Ipei' },
@@ -81,10 +81,10 @@ export const translations = {
   },
   'page.institutions.title': { English: 'JLOS Institutions', Luganda: 'Ebibiina bya JLOS', Kiswahili: 'Taasisi za JLOS', Ateso: 'Ijo ka JLOS' },
   'page.institutions.sub': {
-    English: 'All 8 institutions, one directory. Search by name or the service you need.',
-    Luganda: 'Ebibiina byonna 8, mu kalulu kamu. Noonya erinnya oba obuweereza bw’oyagala.',
-    Kiswahili: 'Taasisi zote 8, saraka moja. Tafuta kwa jina au huduma unayohitaji.',
-    Ateso: 'Ijo ka 8 kesi, alomit. Yenut ka ekiring nu akiyupun ijenu.',
+    English: 'All 5 institutions, one directory. Search by name or the service you need.',
+    Luganda: 'Ebibiina byonna 5, mu kalulu kamu. Noonya erinnya oba obuweereza bw’oyagala.',
+    Kiswahili: 'Taasisi zote 5, saraka moja. Tafuta kwa jina au huduma unayohitaji.',
+    Ateso: 'Ijo ka 5 kesi, alomit. Yenut ka ekiring nu akiyupun ijenu.',
   },
   'page.more.title': { English: 'More', Luganda: 'Ebirala', Kiswahili: 'Zaidi', Ateso: 'Ejaasi' },
   'page.more.sub': {
