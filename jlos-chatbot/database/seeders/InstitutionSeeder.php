@@ -24,5 +24,29 @@ class InstitutionSeeder extends Seeder
                 'base_url' => 'https://uhrc.ug',
             ]
         );
+
+        Institution::updateOrCreate(
+            ['slug' => 'moj'],
+            [
+                'name' => 'Ministry of Justice and Constitutional Affairs',
+                'base_url' => 'https://justice.go.ug',
+            ]
+        );
+
+        Institution::updateOrCreate(
+            ['slug' => 'tat'],
+            [
+                'name' => 'Tax Appeals Tribunal',
+                'base_url' => 'https://tat.go.ug',
+            ]
+        );
+
+        Institution::updateOrCreate(
+            ['slug' => 'jsc'],
+            [
+                'name' => 'Judicial Service Commission',
+                'base_url' => 'https://www.jsc.go.ug',
+            ]
+        );
     }
 }

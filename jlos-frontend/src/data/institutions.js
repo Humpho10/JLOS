@@ -18,7 +18,7 @@
 export const institutions = [
   {
     code: 'MOJ', short: 'Justice', name: 'Ministry of Justice and Constitutional Affairs', sub: 'Legal services & regulation',
-    color: '#0E2A47', icon: 'scale', chatSlug: null, phone: '0800 100 001', website: 'https://justice.go.ug/',
+    color: '#0E2A47', icon: 'scale', chatSlug: 'moj', phone: '0800 100 001', website: 'https://justice.go.ug/',
     logo: 'https://justice.go.ug/wp-content/uploads/2022/09/Ministry-of-Justice-Website-cut-pix-08-1.png',
     services: ['Inspection of chambers', 'Disciplinary committee', 'Filing a complaint', 'Seeing a state attorney', 'Legal education', 'Legal aid'],
   },
@@ -36,13 +36,13 @@ export const institutions = [
   },
   {
     code: 'TAT', short: 'TAT', name: 'Tax Appeals Tribunal', sub: 'Tax dispute resolution',
-    color: '#1F8A57', icon: 'receipt', chatSlug: null, phone: '0800 100 005', website: 'https://tat.go.ug/',
+    color: '#1F8A57', icon: 'receipt', chatSlug: 'tat', phone: '0800 100 005', website: 'https://tat.go.ug/',
     logo: 'https://tat.go.ug/wp-content/uploads/2023/09/tribunal-logo1.png',
     services: ['Filing', 'Hearings (online)', 'Consultation', 'Follow-up on cases'],
   },
   {
     code: 'JSC', short: 'JSC', name: 'Judicial Service Commission', sub: 'Judicial appointments & discipline',
-    color: '#123A61', icon: 'landmark', chatSlug: null, phone: '0800 100 006', website: 'https://www.jsc.go.ug/',
+    color: '#123A61', icon: 'landmark', chatSlug: 'jsc', phone: '0800 100 006', website: 'https://www.jsc.go.ug/',
     logo: 'https://www.jsc.go.ug/wp-content/themes/jsc/img/0.png',
     services: ['Judicial appointments', 'Complaints against judicial officers', 'Case status lookup', 'Court schedules'],
   },

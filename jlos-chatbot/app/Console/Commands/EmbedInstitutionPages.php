@@ -54,7 +54,11 @@ class EmbedInstitutionPages extends Command
             try {
                 $embeddings = [];
                 foreach (array_chunk($chunkTexts, $this->embedBatchSize) as $batch) {
-                    array_push($embeddings, ...Embeddings::for($batch)->dimensions(768)->generate()->embeddings);
+                    // Transient network blips (DNS hiccup, brief packet loss) reaching
+                    // Gemini's API otherwise waste an entire scraped page — retry a
+                    // couple of times before giving up on this batch.
+                    $response = retry(3, fn () => Embeddings::for($batch)->dimensions(768)->generate(), 2000);
+                    array_push($embeddings, ...$response->embeddings);
                 }
             } catch (\Throwable $e) {
                 $this->warn("  Could not generate embeddings ({$e->getMessage()}), skipping page.");
