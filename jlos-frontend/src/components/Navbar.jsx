@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { NAV_ITEMS } from '../data/navItems.js';
 
+//const is a standard JavaScript keyword used to declare block-scoped variables whose references cannot be reassigned
+
 const LANG_CODES = { English: 'EN', Luganda: 'LG', Kiswahili: 'SW', Ateso: 'AT' };
 
 export default function Navbar() {
-  const { activePage, goToPage, isDark, toggleTheme, openModal, language, t } = useApp();
+  const { activePage, goToPage, isDark, toggleTheme, openModal, language, t, user, handleLogout } = useApp();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const go = (id) => {
@@ -17,10 +19,10 @@ export default function Navbar() {
     <>
       <nav className="navbar" aria-label="Primary">
         <div className="nav-left">
-          <div className="brand-cluster-web">
+          <button type="button" className="brand-cluster-web" onClick={() => goToPage('page-home')} aria-label="JLOS Justice Portal — go to homepage">
             <div className="brand-chip-web">
               <img
-                src="/resources/images/jlos-logo.png"
+                src="/resources/images/JLOS-logo.png"
                 alt="JLOS — Justice, Law and Order Sector"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
@@ -28,11 +30,11 @@ export default function Navbar() {
                 }}
               />
             </div>
-          </div>
-          <div className="nav-title">
-            JLOS Justice Portal
-            <span>{t('nav.tagline')}</span>
-          </div>
+            <div className="nav-title">
+              JLOS Justice Portal
+              <span>{t('nav.tagline')}</span>
+            </div>
+          </button>
           <div className="nav-links" id="navLinks">
             {NAV_ITEMS.map((item) => (
               <button

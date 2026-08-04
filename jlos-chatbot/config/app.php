@@ -30,6 +30,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Frontend URL
+    |--------------------------------------------------------------------------
+    |
+    | The React SPA's origin — used to build redirect targets for links a
+    | human clicks outside the SPA itself, like an email verification link.
+    |
+    */
+
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:5175'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Debug Mode
     |--------------------------------------------------------------------------
     |
