@@ -6,10 +6,34 @@ import { useVoiceInput } from '../hooks/useVoiceInput.js';
 import InstitutionIcon from '../utils/InstitutionIcon.jsx';
 
 const HERO_STATS = [
-  { key: 'stat-institutions', value: '8', labelKey: 'hero.stat.institutions', icon: 'bi-bank2' },
+  { key: 'stat-institutions', value: String(institutions.length), labelKey: 'hero.stat.institutions', icon: 'bi-bank2' },
   { key: 'stat-support', value: '24/7', labelKey: 'hero.stat.support', icon: 'bi-clock-history' },
   { key: 'stat-free', value: null, labelKey: 'hero.stat.free', suffixKey: 'hero.stat.freeSuffix', icon: 'bi-patch-check-fill' },
 ];
+
+function InstPill({ inst }) {
+  const [logoFailed, setLogoFailed] = useState(false);
+  const hasLogo = inst.logo && !logoFailed;
+
+  return (
+    <a
+      className="hero-inst-pill"
+      href={inst.website}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={`${inst.short || inst.code} — visit website (opens in a new tab)`}
+    >
+      <span className="hero-inst-pill-ic" aria-hidden="true">
+        {hasLogo ? (
+          <img src={inst.logo} alt="" onError={() => setLogoFailed(true)} />
+        ) : (
+          <InstitutionIcon type={inst.icon} color={inst.color} />
+        )}
+      </span>
+      {inst.short || inst.code}
+    </a>
+  );
+}
 
 /*const QUICK_SERVICES = [
   {
@@ -23,7 +47,7 @@ const HERO_STATS = [
 ];*/
 
 export default function HomePage({ active }) {
-  const { goToPage, goToInstitution, openModal, chat, pushToast, t } = useApp();
+  const { goToPage, openModal, chat, pushToast, t } = useApp();
   const [query, setQuery] = useState('');
 
   const submitQuery = () => {
@@ -61,16 +85,7 @@ export default function HomePage({ active }) {
 
             <div className="hero-inst-pills">
               {institutions.map((inst) => (
-                <button
-                  type="button"
-                  key={inst.code}
-                  className="hero-inst-pill"
-                  onClick={() => goToInstitution(inst.code)}
-                  aria-label={`${inst.short || inst.code} — view services`}
-                >
-                  <span className="hero-inst-pill-ic" aria-hidden="true"><InstitutionIcon type={inst.icon} color="currentColor" /></span>
-                  {inst.short || inst.code}
-                </button>
+                <InstPill inst={inst} key={inst.code} />
               ))}
             </div>
 

@@ -92,13 +92,7 @@ export default function Navbar() {
           >
             <i className="bi bi-list" aria-hidden="true"></i>
           </button>
-          <div className="coa-chip-web" title="Coat of Arms of Uganda">
-            <img
-              src="https://commons.wikimedia.org/wiki/Special:FilePath/Coat_of_arms_of_Uganda.svg"
-              alt="Coat of Arms of Uganda"
-              onError={(e) => { e.currentTarget.parentElement.style.display = 'none'; }}
-            />
-          </div>
+
         </div>
       </nav>
 
