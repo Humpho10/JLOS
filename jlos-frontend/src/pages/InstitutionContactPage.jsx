@@ -2,6 +2,11 @@ import React, { useEffect, useRef } from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import InstitutionIcon from '../utils/InstitutionIcon.jsx';
 
+function formatTime(ms) {
+  if (!ms) return null;
+  return new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
 function ContactMessage({ msg }) {
   if (msg.kind === 'typing') {
     return (
@@ -11,11 +16,23 @@ function ContactMessage({ msg }) {
     );
   }
   if (msg.kind === 'system') return <div className="msg system">{msg.text}</div>;
-  if (msg.kind === 'user') return <div className="msg user">{msg.text}</div>;
+  if (msg.kind === 'user') {
+    const time = formatTime(msg.time);
+    return (
+      <div className="msg user">
+        {msg.text}
+        {time && <div className="msg-time">{time}</div>}
+      </div>
+    );
+  }
   if (msg.kind === 'bot') {
+    const time = formatTime(msg.time);
     return (
       <div className="msg bot">
-        <div className="bot-tag"><div className="av">{msg.avatar || '⚖️'}</div><b>{msg.name}</b></div>
+        <div className="bot-tag">
+          <div className="av">{msg.avatar || '⚖️'}</div><b>{msg.name}</b>
+          {time && <span className="msg-time">{time}</span>}
+        </div>
         {msg.text}
       </div>
     );
@@ -102,6 +119,12 @@ export default function InstitutionContactPage({ active }) {
               placeholder={`Message ${inst.short || inst.name}...`}
               value={institutionChat.input}
               onChange={(e) => institutionChat.setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  institutionChat.run();
+                }
+              }}
             />
             <button type="button" className="send-btn" aria-label="Send message" onClick={() => institutionChat.run()}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M2 21l21-9L2 3v7l15 2-15 2z" /></svg>

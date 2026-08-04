@@ -28,13 +28,25 @@
     --glass-input-bg: rgba(246,244,238,.55);
     --assist-accent: #3B63D6;
     --assist-avatar-bg: #EAF1FB;
-    --accent: #5B3DF0;
-    --accent-2: #7C4DFF;
-    --grad-accent: linear-gradient(135deg, #7C4DFF, #5B3DF0);
+    --accent: #782484;
+    --accent-2: #9A3AA8;
+    --grad-accent: linear-gradient(135deg, #9A3AA8, #782484);
     --teal: #0E9C97;
     --teal-2: #12B5AE;
     --grad-teal: linear-gradient(135deg, #12B5AE, #0E9C97);
     --stat-ic-bg: rgba(255,255,255,.14);
+
+    /* Typography scale — every font-size in the app should reference one of
+       these instead of a one-off px value, so a readability pass is a single
+       edit here instead of hunting through five files. */
+    --fs-2xs: 11px;
+    --fs-xs: 12.5px;
+    --fs-sm: 14px;
+    --fs-base: 15px;
+    --fs-md: 16px;
+    --fs-lg: 18px;
+    --fs-xl: 21px;
+    --fs-2xl: 26px;
   }
   body.theme-dark{
     --bg:#10181F;
@@ -52,9 +64,9 @@
     --glass-input-bg: rgba(255,255,255,.08);
     --assist-accent: #7FA0F5;
     --assist-avatar-bg: rgba(127,160,245,.16);
-    --accent: #8A6DFF;
-    --accent-2: #9C7BFF;
-    --grad-accent: linear-gradient(135deg, #9C7BFF, #6E44E8);
+    --accent: #C36BD1;
+    --accent-2: #D485E0;
+    --grad-accent: linear-gradient(135deg, #D485E0, #A34DB3);
     --teal: #2DD4CB;
     --teal-2: #3FE0D6;
     --grad-teal: linear-gradient(135deg, #3FE0D6, #159E97);

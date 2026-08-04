@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import TiltCard from './TiltCard.jsx';
 import InstitutionIcon from '../utils/InstitutionIcon.jsx';
 import { useApp } from '../context/AppContext.jsx';
@@ -8,6 +8,8 @@ export default function InstitutionCard({ inst, autoOpen = false }) {
   const { goToInstitutionContact } = useApp();
   const [open, setOpen] = useState(autoOpen);
   const [logoFailed, setLogoFailed] = useState(false);
+  const innerRef = useRef(null);
+  const [maxHeight, setMaxHeight] = useState(0);
 
   const hasLogo = inst.logo && !logoFailed;
   const servicesId = `${inst.code}-services`;
@@ -19,6 +21,16 @@ export default function InstitutionCard({ inst, autoOpen = false }) {
   useEffect(() => {
     if (autoOpen) setOpen(true);
   }, [autoOpen]);
+
+  // The panel's real height depends on its content (services list length
+  // varies per institution), so it's measured rather than guessed — this
+  // runs after the 'open' class (and the margin/padding it adds) has
+  // already been committed to the DOM, so scrollHeight reflects the true
+  // expanded size, not the collapsed one.
+  useLayoutEffect(() => {
+    if (!innerRef.current) return;
+    setMaxHeight(open ? innerRef.current.scrollHeight : 0);
+  }, [open]);
 
   return (
     <TiltCard id={`inst-${inst.code}`} className={`inst-card ${open ? 'open' : ''}`} maxTilt={5}>
@@ -48,27 +60,29 @@ export default function InstitutionCard({ inst, autoOpen = false }) {
         </div>
         <div className="ic-chev" aria-hidden="true">▾</div>
       </div>
-      <div className="ic-services" id={servicesId}>
-        {inst.services.map((s) => (
-          <span className="svc-chip" key={s}>{s}</span>
-        ))}
-        <div className="ic-actions">
-          <button
-            type="button"
-            className="mc-btn primary"
-            style={{ flex: 1, padding: '10px 0' }}
-            onClick={(e) => { e.stopPropagation(); goToInstitutionContact(inst); }}
-          >
-            Chat now
-          </button>
-          <a
-            href={`tel:${inst.phone.replace(/\s+/g, '')}`}
-            className="mc-btn ghost"
-            style={{ flex: 1, padding: '10px 0', textAlign: 'center' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            Call
-          </a>
+      <div className="ic-services" id={servicesId} style={{ maxHeight }}>
+        <div className="ic-services-inner" ref={innerRef}>
+          {inst.services.map((s) => (
+            <span className="svc-chip" key={s}>{s}</span>
+          ))}
+          <div className="ic-actions">
+            <button
+              type="button"
+              className="mc-btn primary"
+              style={{ flex: 1, padding: '10px 0' }}
+              onClick={(e) => { e.stopPropagation(); goToInstitutionContact(inst); }}
+            >
+              Chat now
+            </button>
+            <a
+              href={`tel:${inst.phone.replace(/\s+/g, '')}`}
+              className="mc-btn ghost"
+              style={{ flex: 1, padding: '10px 0', textAlign: 'center' }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              Call
+            </a>
+          </div>
         </div>
       </div>
     </TiltCard>
