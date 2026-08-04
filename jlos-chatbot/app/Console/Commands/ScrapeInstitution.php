@@ -38,31 +38,41 @@ class ScrapeInstitution extends Command
             'reports' => '/reports',
             'tribunal' => '/page/about-tribunal',
 
-            // PDFs linked from the /publications page
-            'publications_human_rights_health_advisory_october_revised' => '/sites/default/files/2026-01/Human%20Rights%20Health%20Advisory%20-%20%20October%20revised.pdf',
-            'publications_advisory_on_education_5th_august_2020' => '/sites/default/files/2026-01/Advisory%20on%20Education%20-%20%285th%20August%20%202020%29.pdf',
-            'publications_advisory_elections_final_1st_august_2020' => '/sites/default/files/2026-01/ADVISORY%20ELECTIONS%20%20-%20FINAL%20%281st%20%20August%202020%29.pdf',
-            'publications_equal_opportunities_commission_act_2007' => '/sites/default/files/2025-11/equal-opportunities-commission-act-2007.pdf',
-            'publications_human_rights_enforcement_act_2019' => '/sites/default/files/2026-01/Human%20Rights%20%28Enforcement%29%20Act%2C%202019.pdf',
-            // 'publications_anti_pornography_act_2014' => '/sites/default/files/2026-01/Anti%20Pornography%20Act%202014.pdf', // scanned/image PDF, no extractable text
-            // 'publications_public_order_management_act_2013' => '/sites/default/files/2026-01/Public-Order-Management-Act-2013.pdf', // scanned/image PDF, no extractable text
-            // 'publications_prevention_and_prohibition_of_torture_act_2012' => '/sites/default/files/2026-01/Prevention-and-Prohibition-of-Torture-Act-2012.pdf', // scanned/image PDF, no extractable text
-            'publications_advisory_on_places_of_detention_september_2020' => '/sites/default/files/2025-11/Advisory%20on%20places%20of%20%20detention%20-%20%20September%202020.pdf',
-            'publications_3rd_national_escr_conference_call_for_papers_ab' => '/sites/default/files/2025-11/3rd-National-ESCR-Conference-Call-for-Papers-Abstracts.pdf',
-            'publications_complaints_rocedures_manual_ii_3' => '/sites/default/files/2026-02/complaints-rocedures-manual%20II%20_3_.pdf',
-            'publications_investigators_hand_book' => '/sites/default/files/2026-02/investigators-hand-book.pdf',
-            'publications_uhrc_handbook_on_migration_and_human_rights_giz' => '/sites/default/files/2026-02/uhrc-handbook-on-migration-and-human-rights-GIZ-2022.pdf',
-            'publications_uhrc_clients_charter' => '/sites/default/files/2026-02/uhrc-clients-charter.pdf',
-            'publications_brief_on_ihrd_2020' => '/sites/default/files/2026-02/brief-on-ihrd-2020.pdf',
-            'publications_a_pocketbook_for_police_on_basic_human_rights_s' => '/sites/default/files/2025-11/A-Pocketbook-for-Police-on-Basic-Human-Rights-Standards.pdf',
+            // PDFs linked from the /publications page.
+            // uhrc.ug migrated from Drupal to WordPress at some point, so the
+            // old /sites/default/files/... paths below now 301 to the
+            // homepage instead of 404ing — Http::get() follows the redirect,
+            // so the "PDF" body PdfParser chokes on is actually that
+            // homepage's HTML. Current files are served through the WP
+            // Download Manager plugin at /download/{slug}/?wpdmdl={id}
+            // instead; each mapping here was re-verified against the live
+            // site's Content-Disposition filename.
+            'publications_human_rights_health_advisory_october_revised' => '/download/human-rights-health-advisory-october/?wpdmdl=953',
+            'publications_advisory_on_education_5th_august_2020' => '/download/advisory-on-education/?wpdmdl=950',
+            'publications_advisory_elections_final_1st_august_2020' => '/download/advisory-elections/?wpdmdl=948',
+            'publications_equal_opportunities_commission_act_2007' => '/download/equal-opportunity-commission-act/?wpdmdl=1215',
+            'publications_human_rights_enforcement_act_2019' => '/download/human-rights-enforcement-act-2019/?wpdmdl=1150',
+            // 'publications_anti_pornography_act_2014' => '/download/anti-pornography-act/?wpdmdl=1211', // scanned/image PDF, no extractable text
+            // 'publications_public_order_management_act_2013' => '/download/public-order-management-act-2013/?wpdmdl=499', // scanned/image PDF, no extractable text
+            // 'publications_prevention_and_prohibition_of_torture_act_2012' => '/download/prevention-and-prohibition-of-torture-act-2012/?wpdmdl=498', // scanned/image PDF, no extractable text
+            'publications_advisory_on_places_of_detention_september_2020' => '/download/advisory-on-places-of-detention/?wpdmdl=949',
+            'publications_3rd_national_escr_conference_call_for_papers_ab' => '/download/3rd-national-escr-conference-call-for-papers-abstracts/?wpdmdl=492',
+            'publications_complaints_rocedures_manual_ii_3' => '/download/complaints-handling-procedures-manual-2015/?wpdmdl=1062',
+            // 'publications_investigators_hand_book' — no longer published on the site; the slug and every guessed variant now redirect to the homepage.
+            'publications_uhrc_handbook_on_migration_and_human_rights_giz' => '/download/uhrc-handbook-on-migration-and-human-rights/?wpdmdl=2241',
+            'publications_uhrc_clients_charter' => '/download/uhrc-clients-charter/?wpdmdl=520',
+            'publications_brief_on_ihrd_2020' => '/download/brief-on-ihrd-2020-website/?wpdmdl=1207',
+            'publications_a_pocketbook_for_police_on_basic_human_rights_s' => '/download/a-pocketbook-for-police-on-basic-human-rights-standards/?wpdmdl=515',
 
-            // PDFs linked from the /reports page
-            'reports_uhrc_6th_annual_report' => '/sites/default/files/2026-02/UHRC%206th%20Annual%20Report.pdf',
-            'reports_uhrc_7th_annual_report' => '/sites/default/files/2026-02/UHRC%207th%20Annual%20Report.pdf',
-            'reports_uhrc_13th_annual_report' => '/sites/default/files/2026-02/UHRC%2013th%20Annual%20Report.pdf',
-            'reports_uhrc_19th_annual_report' => '/sites/default/files/2026-02/UHRC%2019th%20Annual%20Report.pdf',
-            // 'reports_uhrc_4th_annual_report' => '/sites/default/files/2026-02/UHRC%204th%20Annual%20Report.pdf', // malformed PDF, crashes pdfparser's font handling
-            // 'reports_uganda_human_rights_commission_upr_report' => '/sites/default/files/2026-02/uganda-human-rights-commission-UPR-report.pdf', // scanned/image PDF, no extractable text
+            // PDFs linked from /uhrc-reports/ (the old /reports page path also
+            // 301s to the homepage now). The old 6th/7th/13th/19th annual
+            // reports are no longer published on the redesigned site — using
+            // the most recent four instead, which is more useful for a
+            // chatbot anyway.
+            'reports_uhrc_28th_annual_report' => '/download/uhrc-28th-annual-report/?wpdmdl=2988',
+            'reports_uhrc_27th_annual_report' => '/download/the-27th-uhrc-annual-report-on-the-state-of-human-rights-and-freedoms-in-uganda-in-2024/?wpdmdl=2499',
+            'reports_uhrc_26th_annual_report' => '/download/uhrc-26th-annual-report-2023/?wpdmdl=2286',
+            'reports_uhrc_25th_annual_report' => '/download/25th-uhrc-annual-report/?wpdmdl=1946',
         ],
     ];
 
@@ -96,7 +106,15 @@ class ScrapeInstitution extends Command
                 continue;
             }
 
-            $isPdf = str_ends_with(strtolower(parse_url($url, PHP_URL_PATH) ?? ''), '.pdf');
+            // Some CMSes (e.g. WordPress' Download Manager plugin, which
+            // UHRC's PDFs now go through) serve the file from a URL whose
+            // path doesn't end in .pdf at all — the real file id lives in
+            // the query string. The Content-Type header is what the server
+            // actually says the body is, so trust that first and only fall
+            // back to the URL's extension if the header is missing/generic.
+            $contentType = strtolower($response->header('Content-Type') ?? '');
+            $isPdf = str_contains($contentType, 'application/pdf')
+                || (! $contentType && str_ends_with(strtolower(parse_url($url, PHP_URL_PATH) ?? ''), '.pdf'));
 
             [$title, $cleanedText] = $isPdf
                 ? $this->extractPdf($response->body(), $path)

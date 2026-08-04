@@ -62,7 +62,7 @@ select:focus-visible,
 .help-input-row-web input:focus-visible,
 .inst-search-web input:focus-visible {
   outline-offset: 2px;
-  box-shadow: 0 0 0 4px rgba(91, 61, 240, .16);
+  box-shadow: 0 0 0 4px rgba(120, 36, 132, .16);
 }
 
 /* Some controls are dark chips on a dark surface (nav-bg, chat send);
