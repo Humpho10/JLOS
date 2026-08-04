@@ -15,6 +15,7 @@ import AccessModal from './components/modals/AccessModal.jsx';
 import FaqModal from './components/modals/FaqModal.jsx';
 import SupportModal from './components/modals/SupportModal.jsx';
 import ServicesModal from './components/modals/ServicesModal.jsx';
+import AuthModal from './components/modals/AuthModal.jsx';
 
 const PAGES = {
   'page-home': HomePage,
@@ -80,6 +81,7 @@ function Shell() {
       <FaqModal />
       <SupportModal />
       <ServicesModal />
+      <AuthModal />
     </>
   );
 }

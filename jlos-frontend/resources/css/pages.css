@@ -92,6 +92,7 @@
     flex:1; border:1px solid var(--line); background:var(--bg); color:var(--text); border-radius:20px;
     padding:14px 20px; font-size:13.5px; outline:none; font-family:inherit; line-height:1.5;
     resize:none; min-height:50px; max-height:200px; overflow-y:auto;
+    display:flex; align-items:center;
   }
   .attach-btn, .send-btn, .mic-btn{
     width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex:0 0 auto;
@@ -125,6 +126,30 @@
   .file-doc .fd-ic{width:36px; height:36px; border-radius:10px; flex:0 0 auto; background:linear-gradient(135deg,#EAF0F6,#DCE9F4); color:var(--ink); display:flex; align-items:center; justify-content:center;}
   .file-doc .fd-name{font-size:11px; font-weight:700; color:var(--ink); word-break:break-word;}
   .file-meta{font-size:9.8px; color:var(--muted);}
+
+  @media (max-width:640px){
+    /* Phones: the 32px side padding plus 30-40px of internal card padding
+       left very little room for actual conversation — tighten both so the
+       chat fills the screen instead of sitting in a narrow inset column.
+       Placed after the base rules above so it actually wins the cascade
+       (same specificity, so source order decides). */
+    .chat-page-wrap{padding:8px 10px 10px;}
+    .chat-panel{border-radius:16px;}
+    .chat-panel-head{padding:14px 16px; gap:10px;}
+    .chat-panel-head .cph-icon{width:34px; height:34px;}
+    .chat-panel-head h3{font-size:14.5px;}
+    .chat-panel-head p{font-size:10.5px;}
+    .chat-panel-body{padding:16px 14px; gap:10px;}
+    .msg{max-width:85%; font-size:13px; padding:10px 14px;}
+    .chat-panel-input{padding:10px 12px; gap:8px;}
+    /* The placeholder ("Type your problem here...") often wraps onto a 2nd
+       line at this width — min-height needs to comfortably fit 2 lines or
+       the 2nd one gets clipped against the box's bottom edge instead of
+       both lines sitting centered (the align-items:center added above only
+       centers whatever fits; it can't un-clip an undersized box). */
+    .chat-panel-input textarea{padding:11px 14px; min-height:60px; font-size:12.5px;}
+  }
+
   /* ============ INSTITUTIONS PAGE ============ */
   .inst-search-web{
     max-width:480px; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:13px 16px;

@@ -2,7 +2,9 @@
 // Thin client for the jlos-chatbot Laravel API.
 // ============================================================
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+import { getAuthToken } from './authToken.js';
+
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export class ApiError extends Error {
   constructor(message, status) {
@@ -10,6 +12,14 @@ export class ApiError extends Error {
     this.name = 'ApiError';
     this.status = status;
   }
+}
+
+// Attaches a Bearer token when the visitor is signed in, so a request made
+// through the same endpoints a guest uses gets resolved against their
+// account instead of a guest_token.
+function authHeaders(extra = {}) {
+  const token = getAuthToken();
+  return token ? { ...extra, Authorization: `Bearer ${token}` } : extra;
 }
 
 export async function fetchInstitutions() {
@@ -24,13 +34,17 @@ export async function fetchInstitutions() {
 // arrives via onDelta instead of waiting for the whole reply before
 // returning anything. Shared by the general and institution-scoped chats —
 // they only differ in which endpoint they stream from.
-async function streamChat(path, message, { onDelta, onError }) {
+//
+// `conversationId`/`guestToken` let the backend attach this exchange to a
+// persisted conversation; `onConversationId` reports the ID the backend is
+// using (a brand-new conversation's ID arrives this way, before any text).
+async function streamChat(path, message, { conversationId, guestToken, onDelta, onError, onConversationId }) {
   let res;
   try {
     res = await fetch(`${API_URL}${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
-      body: JSON.stringify({ message }),
+      headers: authHeaders({ 'Content-Type': 'application/json', Accept: 'text/event-stream' }),
+      body: JSON.stringify({ message, conversation_id: conversationId, guest_token: guestToken }),
     });
   } catch {
     onError("Can't reach the assistant right now — check that the API server is running.");
@@ -67,7 +81,8 @@ async function streamChat(path, message, { onDelta, onError }) {
         continue;
       }
 
-      if (payload.type === 'delta') onDelta(payload.text);
+      if (payload.type === 'conversation') onConversationId?.(payload.id);
+      else if (payload.type === 'delta') onDelta(payload.text);
       else if (payload.type === 'error') onError(payload.message);
       else if (payload.type === 'done') return;
     }
@@ -77,8 +92,18 @@ async function streamChat(path, message, { onDelta, onError }) {
 // Streams a reply from the general, institution-agnostic chat endpoint.
 // Returns a promise so callers can .catch()/.finally() around the whole
 // exchange, while onDelta/onError report progress as it happens.
-export function sendMessageStream(message, { onDelta, onError }) {
-  return streamChat('/api/chat/stream', message, { onDelta, onError });
+export function sendMessageStream(message, { conversationId, guestToken, onDelta, onError, onConversationId }) {
+  return streamChat('/api/chat/stream', message, { conversationId, guestToken, onDelta, onError, onConversationId });
+}
+
+// The guest's most recent persisted conversation (if any), so the frontend
+// can rebuild the chat on page load instead of always starting fresh.
+export async function fetchCurrentConversation(guestToken) {
+  const res = await fetch(`${API_URL}/api/conversations/current?guest_token=${encodeURIComponent(guestToken)}`, {
+    headers: authHeaders({ Accept: 'application/json' }),
+  });
+  if (!res.ok) throw new ApiError('Could not load conversation history.', res.status);
+  return res.json();
 }
 
 // Reads an attached image/PDF and returns a short description of it — the

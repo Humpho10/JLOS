@@ -77,8 +77,8 @@ export default function HomePage({ active }) {
               {t('hero.badge')}
             </div>
             <h1>
-              <span className="h1-white">Justice</span><br />
-              <span className="h1-gold">starts</span> <span className="h1-white">here.</span>
+              <span className="h1-white">{t('hero.heading.part1')}</span><br />
+              <span className="h1-gold">{t('hero.heading.highlight')}</span> <span className="h1-white">{t('hero.heading.part2')}</span>
               <span className="h1-dot"></span>
             </h1>
             <p className="hero-sub-web">{t('hero.sub')}</p>

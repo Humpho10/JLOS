@@ -10,7 +10,7 @@
   .navbar, .page, .site-footer{ position:relative; z-index:1; }
   /* ============ NAVBAR — floating rounded card ============ */
   .navbar{
-    position:sticky; top:14px; z-index:200;
+    z-index:200;
     margin:14px 20px 0;
     background:var(--card);
     backdrop-filter:saturate(160%) blur(14px);
@@ -31,7 +31,10 @@
   /* Brand block must never be flex-shrunk: without this the logo chip
      collapsed to 0 width (and the title wrapped to 3 lines) whenever the
      nav row got tight. */
-  .brand-cluster-web{display:flex; align-items:center; gap:10px; flex:0 0 auto;}
+  .brand-cluster-web{
+    display:flex; align-items:center; gap:10px; flex:0 0 auto;
+    background:none; border:none; padding:0; margin:0; cursor:pointer; text-align:left; font:inherit;
+  }
   .brand-chip-web{
     background:var(--bg); border-radius:12px; padding:6px 10px; height:44px; display:flex; align-items:center;
     box-shadow:inset 0 0 0 1px var(--line); flex:0 0 auto;
@@ -96,6 +99,21 @@
   @media (max-width:560px){
     .nav-title span{display:none;}
     .navbar{margin:10px 12px 0; padding:0 14px;}
+    /* At this width the logo chip + full wordmark + theme/bell/language/
+       hamburger icons + the decorative coat-of-arms simply don't fit —
+       drop the wordmark and the coat-of-arms (both non-essential; the
+       logo image alone still carries the branding) so what's left
+       (logo, theme, notifications, language, hamburger) has room to
+       breathe instead of overflowing/clipping. */
+    .nav-title{display:none;}
+    .navbar .coa-chip-web{display:none;}
+    .nav-right{gap:6px;}
+  }
+  @media (max-width:400px){
+    /* On the narrowest phones, the language button's "EN" label + chevron
+       are the next things to go — the globe icon alone still opens it. */
+    .nav-lang-btn span, .nav-lang-btn .nav-lang-chev{display:none;}
+    .nav-lang-btn{padding:0 9px;}
   }
   /* ============ PAGES ============ */
   .page{display:none;}
