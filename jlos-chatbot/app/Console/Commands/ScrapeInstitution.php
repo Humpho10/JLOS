@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Institution;
 use App\Models\ScrapedPage;
 use Illuminate\Console\Command;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Smalot\PdfParser\Parser as PdfParser;
 use Symfony\Component\DomCrawler\Crawler;
@@ -74,6 +75,43 @@ class ScrapeInstitution extends Command
             'reports_uhrc_26th_annual_report' => '/download/uhrc-26th-annual-report-2023/?wpdmdl=2286',
             'reports_uhrc_25th_annual_report' => '/download/25th-uhrc-annual-report/?wpdmdl=1946',
         ],
+        'moj' => [
+            'about' => '/about-us/',
+            'law_council' => '/law-council/',
+            'civil_litigation' => '/directorate-of-civil-litigation/',
+            'legal_advisory' => '/legaladvisory/',
+            'administrator_general' => '/administratorgeneral/',
+            'finance_administration' => '/finance-andadministration/',
+            'publications' => '/publications/',
+            'reports' => '/reports/',
+            'press' => '/press/',
+            'contact' => '/connect-with-us/',
+        ],
+        'tat' => [
+            'about' => '/about-us/',
+            'history' => '/our-history/',
+            'leadership' => '/the-tribunal/',
+            'registrars' => '/registrars/',
+            'organogram' => '/organogram/',
+            'legislation' => '/legislation/',
+            'service_how_to_apply' => '/how-to-apply/',
+            'case_summaries' => '/tat-case-summaries/',
+            'reports' => '/annual-reports/',
+            'contact' => '/contact-us/',
+        ],
+        'jsc' => [
+            'about' => '/who-we-are/',
+            'mission_vision' => '/mission-vision-objectives/',
+            'functions' => '/functions-of-the-commission/',
+            'leadership' => '/people/',
+            'organogram' => '/who-we-are/organogram/',
+            'service_how_to_complain' => '/how-to-file-a-complaint/',
+            'service_complaint_form' => '/online-complaint-form/',
+            'service_how_to_apply' => '/how-to-apply/',
+            'publications' => '/publications/',
+            'faqs' => '/faqs/',
+            'contact' => '/contact-us/',
+        ],
     ];
 
     public function handle(): int
@@ -97,9 +135,24 @@ class ScrapeInstitution extends Command
             $url = rtrim($institution->base_url, '/').$path;
             $this->info("Fetching {$url}...");
 
-            $response = Http::withHeaders([
-            'User-Agent' => 'JLOS-Chatbot-Prototype/1.0 (contact: your-email-here@example.com)',
-             ])->retry(3, 3000)->timeout(30)->get($url);
+            try {
+                // throw: false — without it, ->retry() throws a RequestException
+                // itself once retries are exhausted on any non-2xx status (see
+                // PendingRequest::send()), which would skip the $response->failed()
+                // check below entirely and crash the whole command on the first
+                // 4xx/5xx page instead of just skipping it.
+                $response = Http::withHeaders([
+                'User-Agent' => 'JLOS-Chatbot-Prototype/1.0 (contact: your-email-here@example.com)',
+                 ])->retry(3, 3000, throw: false)->timeout(30)->get($url);
+            } catch (ConnectionException $e) {
+                // Network-level failure (DNS, refused connection, timeout with
+                // no response at all) — distinct from $response->failed() below,
+                // which only covers HTTP-level error statuses on a response that
+                // did come back. Skip this page and keep going instead of
+                // letting one slow/unresponsive page kill the whole run.
+                $this->warn("  Connection failed ({$e->getMessage()}), skipping.");
+                continue;
+            }
 
             if ($response->failed()) {
                 $this->warn("  Failed ({$response->status()}), skipping.");
@@ -112,9 +165,9 @@ class ScrapeInstitution extends Command
             // the query string. The Content-Type header is what the server
             // actually says the body is, so trust that first and only fall
             // back to the URL's extension if the header is missing/generic.
-            $contentType = strtolower($response->header('Content-Type') ?? '');
-            $isPdf = str_contains($contentType, 'application/pdf')
-                || (! $contentType && str_ends_with(strtolower(parse_url($url, PHP_URL_PATH) ?? ''), '.pdf'));
+            $mimeType = strtolower($response->header('Content-Type') ?? '');
+            $isPdf = str_contains($mimeType, 'application/pdf')
+                || (! $mimeType && str_ends_with(strtolower(parse_url($url, PHP_URL_PATH) ?? ''), '.pdf'));
 
             [$title, $cleanedText] = $isPdf
                 ? $this->extractPdf($response->body(), $path)
