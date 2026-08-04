@@ -43,14 +43,17 @@ function formatSize(bytes) {
   return (kb / 1024).toFixed(1) + ' MB';
 }
 
-// Turns persisted {role, content} rows back into the shape the chat UI
-// already renders, so restored history looks identical to a live reply.
+// Turns persisted {role, content, created_at} rows back into the shape the
+// chat UI already renders, so restored history looks identical to a live
+// reply — including its real original timestamp, not the moment it was
+// loaded back in.
 function historyToMessages(rawMessages) {
-  return rawMessages.map((m) => (
-    m.role === 'user'
-      ? { kind: 'user', text: m.content }
-      : { kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: m.content }
-  ));
+  return rawMessages.map((m) => {
+    const time = new Date(m.created_at).getTime();
+    return m.role === 'user'
+      ? { kind: 'user', text: m.content, time }
+      : { kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: m.content, time };
+  });
 }
 
 // ------------------------------------------------------------
@@ -86,7 +89,7 @@ function useChatSession({
   );
 
   const addMessage = useCallback((msg) => {
-    setMessages((prev) => [...prev, { id: nextId(), ...msg }]);
+    setMessages((prev) => [...prev, { id: nextId(), time: Date.now(), ...msg }]);
   }, []);
   const addTyping = useCallback(() => {
     setMessages((prev) => [...prev, { id: 'typing', kind: 'typing' }]);
@@ -99,7 +102,7 @@ function useChatSession({
   }, []);
 
   const reset = useCallback((msgs) => {
-    setMessages(msgs.map((m) => ({ id: nextId(), ...m })));
+    setMessages(msgs.map((m) => ({ id: nextId(), time: Date.now(), ...m })));
     setStatus(idleStatus);
     setInput('');
   }, [idleStatus]);
@@ -107,7 +110,7 @@ function useChatSession({
   // Replaces the canned greeting with real restored history on page load —
   // unlike reset(), this also remembers which conversation to keep appending to.
   const hydrate = useCallback((msgs, convId) => {
-    setMessages(msgs.map((m) => ({ id: nextId(), ...m })));
+    setMessages(msgs.map((m) => ({ id: nextId(), time: Date.now(), ...m })));
     setConversationId(convId);
   }, []);
 
@@ -143,7 +146,7 @@ function useChatSession({
           botMessageId = nextId();
           setMessages((prev) => [
             ...prev,
-            { id: botMessageId, kind: 'bot', responder: 'ai', name, avatar, text: chunk },
+            { id: botMessageId, time: Date.now(), kind: 'bot', responder: 'ai', name, avatar, text: chunk },
           ]);
         } else {
           appendToMessage(botMessageId, chunk);
@@ -193,8 +196,16 @@ export function AppProvider({ children }) {
   }, []);
 
   // ---------- theme ----------
-  const [isDark, setIsDark] = useState(false);
-  const toggleTheme = useCallback(() => setIsDark((d) => !d), []);
+  // Persisted so a returning visitor doesn't land back in light mode after
+  // explicitly switching to dark (or vice versa).
+  const [isDark, setIsDark] = useState(() => localStorage.getItem('jlos_theme') === 'dark');
+  const toggleTheme = useCallback(() => {
+    setIsDark((d) => {
+      const next = !d;
+      localStorage.setItem('jlos_theme', next ? 'dark' : 'light');
+      return next;
+    });
+  }, []);
 
   // ---------- modals ----------
   const [openModalIds, setOpenModalIds] = useState(() => new Set());
@@ -213,13 +224,14 @@ export function AppProvider({ children }) {
 
   // ---------- toast ----------
   const [toasts, setToasts] = useState([]);
+  const dismissToast = useCallback((id) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
   const pushToast = useCallback((msg) => {
     const id = nextId();
     setToasts((prev) => [...prev, { id, msg }]);
-    setTimeout(() => {
-      setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 2850);
-  }, []);
+    setTimeout(() => dismissToast(id), 2850);
+  }, [dismissToast]);
 
   // The verification email link redirects here with ?verified=1/0 once the
   // backend has processed it — surface that as a toast, then drop the param
@@ -235,9 +247,12 @@ export function AppProvider({ children }) {
   }, []);
 
   // ---------- language ----------
-  const [language, setLanguageState] = useState('English');
+  // Persisted the same way as theme — a returning visitor keeps whatever
+  // language they picked instead of it silently reverting to English.
+  const [language, setLanguageState] = useState(() => localStorage.getItem('jlos_language') || 'English');
   const setLanguage = useCallback((name) => {
     setLanguageState(name);
+    localStorage.setItem('jlos_language', name);
     setTimeout(() => {
       closeModal('langModal');
       pushToast('Language set to ' + name);
@@ -436,7 +451,7 @@ export function AppProvider({ children }) {
     activePage, goToPage,
     isDark, toggleTheme,
     openModal, closeModal, closeAllModals, isModalOpen,
-    toasts, pushToast,
+    toasts, pushToast, dismissToast,
     language, setLanguage, t,
     chat: {
       messages: generalChat.messages, chatStatus: generalChat.status,

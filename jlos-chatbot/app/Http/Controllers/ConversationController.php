@@ -32,6 +32,7 @@ class ConversationController extends Controller
             'messages' => $conversation->messages->map(fn ($m) => [
                 'role' => $m->role,
                 'content' => $m->content,
+                'created_at' => $m->created_at->toIso8601String(),
             ]),
         ]);
     }

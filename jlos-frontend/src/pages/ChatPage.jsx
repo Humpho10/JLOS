@@ -3,7 +3,16 @@ import { useApp } from '../context/AppContext.jsx';
 import { useVoiceInput } from '../hooks/useVoiceInput.js';
 import { stripMarkdown } from '../utils/stripMarkdown.js';
 
+// Persisted messages carry their real original time; canned/greeting
+// messages have no `time` at all, so they render without one rather than
+// showing a misleading "just now".
+function formatTime(ms) {
+  if (!ms) return null;
+  return new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+}
+
 function FileMsg({ msg }) {
+  const time = formatTime(msg.time);
   return (
     <div className="msg file-msg">
       <div className="file-chip">
@@ -18,12 +27,15 @@ function FileMsg({ msg }) {
           </div>
         )}
       </div>
-      <div className="file-meta">{msg.isImage ? `${msg.name} · ${msg.sizeLabel}` : msg.sizeLabel}</div>
+      <div className="file-meta">
+        {msg.isImage ? `${msg.name} · ${msg.sizeLabel}` : msg.sizeLabel}
+        {time && <span className="msg-time"> · {time}</span>}
+      </div>
     </div>
   );
 }
 
-function ChatMessage({ msg, speakingId, onToggleSpeak }) {
+function ChatMessage({ msg, speakingId, onToggleSpeak, copiedId, onCopy }) {
   if (msg.kind === 'typing') {
     return (
       <div className="msg bot typing-wrap">
@@ -34,14 +46,41 @@ function ChatMessage({ msg, speakingId, onToggleSpeak }) {
   }
   if (msg.kind === 'system') return <div className="msg system">{msg.text}</div>;
   if (msg.kind === 'file-msg') return <FileMsg msg={msg} />;
-  if (msg.kind === 'user') return <div className="msg user">{msg.text}</div>;
+  if (msg.kind === 'user') {
+    const time = formatTime(msg.time);
+    return (
+      <div className="msg user">
+        {msg.text}
+        {time && <div className="msg-time">{time}</div>}
+      </div>
+    );
+  }
   if (msg.kind === 'bot') {
     const isSpeaking = speakingId === msg.id;
+    const isCopied = copiedId === msg.id;
     const cleanText = stripMarkdown(msg.text);
+    const time = formatTime(msg.time);
     return (
       <div className="msg bot">
         <div className="bot-tag">
           <div className="av">{msg.avatar || '⚖️'}</div><b>{msg.name || 'Justice AI'}</b>
+          <button
+            type="button"
+            className="speak-btn"
+            title={isCopied ? 'Copied!' : 'Copy this reply'}
+            aria-label={isCopied ? 'Copied to clipboard' : 'Copy this reply'}
+            onClick={() => onCopy(msg.id, cleanText)}
+          >
+            {isCopied ? (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            ) : (
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            )}
+          </button>
           <button
             type="button"
             className={`speak-btn ${isSpeaking ? 'speaking' : ''}`}
@@ -60,6 +99,7 @@ function ChatMessage({ msg, speakingId, onToggleSpeak }) {
               </svg>
             )}
           </button>
+          {time && <span className="msg-time">{time}</span>}
         </div>
         {cleanText}
       </div>
@@ -74,6 +114,7 @@ export default function ChatPage({ active }) {
   const fileInputRef = useRef(null);
   const inputRef = useRef(null);
   const [speakingId, setSpeakingId] = useState(null);
+  const [copiedId, setCopiedId] = useState(null);
 
   useEffect(() => {
     if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
@@ -118,6 +159,16 @@ export default function ChatPage({ active }) {
     }
   }, []);
 
+  const copyReply = useCallback((id, text) => {
+    if (typeof navigator === 'undefined' || !navigator.clipboard) return;
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        setCopiedId(id);
+        setTimeout(() => setCopiedId((current) => (current === id ? null : current)), 1800);
+      })
+      .catch(() => pushToast('Could not copy — try selecting the text instead.'));
+  }, [pushToast]);
+
   const { listening, toggle: toggleVoiceInput } = useVoiceInput({
     onTranscript: (text) => chat.setChatInput(text),
     onFinish: (text) => chat.runChatDemo(text),
@@ -150,7 +201,14 @@ export default function ChatPage({ active }) {
           )}
           <div className="chat-panel-body" id="chatBodyWeb" ref={bodyRef} role="log" aria-live="polite" aria-label="Conversation">
             {chat.messages.map((m) => (
-              <ChatMessage msg={m} key={m.id} speakingId={speakingId} onToggleSpeak={toggleSpeak} />
+              <ChatMessage
+                msg={m}
+                key={m.id}
+                speakingId={speakingId}
+                onToggleSpeak={toggleSpeak}
+                copiedId={copiedId}
+                onCopy={copyReply}
+              />
             ))}
           </div>
           <div className="chat-panel-input">
@@ -176,6 +234,12 @@ export default function ChatPage({ active }) {
               placeholder={listening ? 'Listening…' : 'Type your problem here...'}
               value={chat.chatInput}
               onChange={(e) => chat.setChatInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  chat.runChatDemo();
+                }
+              }}
             />
             <button
               type="button"

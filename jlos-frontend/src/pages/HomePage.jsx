@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import TiltCard from '../components/TiltCard.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { institutions } from '../data/institutions.js';
@@ -10,6 +10,40 @@ const HERO_STATS = [
   { key: 'stat-support', value: '24/7', labelKey: 'hero.stat.support', icon: 'bi-clock-history' },
   { key: 'stat-free', value: null, labelKey: 'hero.stat.free', suffixKey: 'hero.stat.freeSuffix', icon: 'bi-patch-check-fill' },
 ];
+
+// Counts up from 0 to `value` once on mount instead of just appearing — the
+// only stat this applies to is the institutions count (a real number);
+// "24/7" and "Free" aren't counts, so they're rendered as plain text.
+function StatCount({ value }) {
+  const [display, setDisplay] = useState(0);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setDisplay(value);
+      return;
+    }
+
+    let raf;
+    const duration = 900;
+    const start = performance.now();
+
+    const tick = (now) => {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - (1 - progress) ** 3;
+      setDisplay(Math.round(value * eased));
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    };
+
+    raf = requestAnimationFrame(tick);
+    // Backstop for when rAF is throttled or never fires (e.g. the page
+    // loaded in a background tab) — guarantees the real number still shows
+    // up shortly after mount instead of being stuck at 0 indefinitely.
+    const fallback = setTimeout(() => setDisplay(value), duration + 150);
+    return () => { cancelAnimationFrame(raf); clearTimeout(fallback); };
+  }, [value]);
+
+  return display;
+}
 
 function InstPill({ inst }) {
   const [logoFailed, setLogoFailed] = useState(false);
@@ -90,15 +124,18 @@ export default function HomePage({ active }) {
             </div>
 
             <div className="hero-stats-row">
-              {HERO_STATS.map((stat) => (
-                <div className="hero-stat" key={stat.key}>
-                  <span className="hero-stat-ic"><i className={`bi ${stat.icon}`}></i></span>
-                  <span className="hero-stat-text">
-                    <b>{stat.value || t(stat.labelKey)}</b>
-                    <span>{stat.value ? t(stat.labelKey) : t(stat.suffixKey)}</span>
-                  </span>
-                </div>
-              ))}
+              {HERO_STATS.map((stat) => {
+                const isNumeric = stat.value != null && /^\d+$/.test(stat.value);
+                return (
+                  <div className="hero-stat" key={stat.key}>
+                    <span className="hero-stat-ic"><i className={`bi ${stat.icon}`}></i></span>
+                    <span className="hero-stat-text">
+                      <b>{stat.value ? (isNumeric ? <StatCount value={Number(stat.value)} /> : stat.value) : t(stat.labelKey)}</b>
+                      <span>{stat.value ? t(stat.labelKey) : t(stat.suffixKey)}</span>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
