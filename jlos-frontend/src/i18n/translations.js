@@ -103,10 +103,10 @@ export const translations = {
   // ---------- footer ----------
   'footer.tagline': { English: 'Justice, Law & Order Sector', Luganda: 'Ekitongole ky’Obwenkanya, Amateeka n’Obuteefu', Kiswahili: 'Sekta ya Haki, Sheria na Utaratibu', Ateso: 'Sector ka Ainakiyar ka Ilosit' },
   'footer.desc': {
-    English: 'A single entry point to justice services across all 8 JLOS institutions — administering justice and maintaining law and order for every Ugandan.',
-    Luganda: 'Omulyango gumu ogutuusa ku buweereza bw’obwenkanya mu bibiina byonna 8 ebya JLOS — okuwa obwenkanya n’okukuuma amateeka n’obuteefu eri Omuganda yenna.',
-    Kiswahili: 'Lango moja la huduma za haki katika taasisi zote 8 za JLOS — kusimamia haki na kudumisha sheria na utaratibu kwa kila Mganda.',
-    Ateso: 'Ekot alomit ka akiyupun ka ainakiyar ijo 8 ka JLOS — akiyar ainakiyar ka akitodik ilosit ijo Uganda kesi.',
+    English: 'A single entry point to justice services across all 5 JLOS institutions — administering justice and maintaining law and order for every Ugandan.',
+    Luganda: 'Omulyango gumu ogutuusa ku buweereza bw’obwenkanya mu bibiina byonna 5 ebya JLOS — okuwa obwenkanya n’okukuuma amateeka n’obuteefu eri Omuganda yenna.',
+    Kiswahili: 'Lango moja la huduma za haki katika taasisi zote 5 za JLOS — kusimamia haki na kudumisha sheria na utaratibu kwa kila Mganda.',
+    Ateso: 'Ekot alomit ka akiyupun ka ainakiyar ijo 5 ka JLOS — akiyar ainakiyar ka akitodik ilosit ijo Uganda kesi.',
   },
   'footer.quickLinks': { English: 'Quick Links', Luganda: 'Emikutu Emyangu', Kiswahili: 'Viungo vya Haraka', Ateso: 'Ilinki Lu' },
   'footer.institutions': { English: 'Institutions', Luganda: 'Ebibiina', Kiswahili: 'Taasisi', Ateso: 'Ijo' },

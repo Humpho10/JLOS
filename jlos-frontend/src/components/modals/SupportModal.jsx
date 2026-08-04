@@ -5,7 +5,7 @@ export default function SupportModal() {
   return (
     <ModalShell id="supportModal" title="Support & About Us">
       <p style={{ fontSize: '12px', color: 'var(--muted)', lineHeight: 1.6, marginTop: '6px' }}>
-        JLOS brings together eight core institutions to administer justice and maintain law and order.
+        JLOS brings together core institutions to administer justice and maintain law and order.
         The Justice Portal is your single entry point to reach any of them.
       </p>
       <div style={{ marginTop: '10px' }}>
