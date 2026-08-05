@@ -1,71 +1,89 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import HeroSlideshow from '../components/HeroSlideshow.jsx';
+import Reveal from '../components/Reveal.jsx';
 import TiltCard from '../components/TiltCard.jsx';
 import { useApp } from '../context/AppContext.jsx';
 import { institutions } from '../data/institutions.js';
 import { useVoiceInput } from '../hooks/useVoiceInput.js';
 import InstitutionIcon from '../utils/InstitutionIcon.jsx';
 
-const HERO_STATS = [
-  { key: 'stat-institutions', value: String(institutions.length), labelKey: 'hero.stat.institutions', icon: 'bi-bank2' },
-  { key: 'stat-support', value: '24/7', labelKey: 'hero.stat.support', icon: 'bi-clock-history' },
-  { key: 'stat-free', value: null, labelKey: 'hero.stat.free', suffixKey: 'hero.stat.freeSuffix', icon: 'bi-patch-check-fill' },
+// One real photo per institution, sourced from each institution's own
+// website (checked directly rather than guessed — see credit for the
+// exact page it came from). Kept as page-relative-sized JPEGs already
+// published by each site rather than re-hosting/re-encoding them.
+const HERO_SLIDES = [
+  {
+    image: 'https://jlos.go.ug/wp-content/uploads/2025/09/j1.jpg',
+    alt: 'JLOS — a sector-wide approach bringing together 18 institutions',
+    credit: 'JLOS',
+  },
+  {
+    image: 'https://uhrc.ug/wp-content/uploads/2025/11/The-Commission-Tribunal-headed-by-the-Hon.-Chairperson-Mariam-Wangadya-hearing-cases-of-alleged-human-rights-violations-at-the-Jinja-Regional-Office-700x539.jpeg',
+    alt: 'Uganda Human Rights Commission Tribunal hearing a case',
+    credit: 'Uganda Human Rights Commission',
+  },
+  {
+    image: 'https://dpp.go.ug/wp-content/uploads/2025/11/handover-scaled.jpg',
+    alt: 'Office of the Director of Public Prosecutions handover ceremony',
+    credit: 'Office of the DPP',
+  },
+  {
+    image: 'https://tat.go.ug/wp-content/uploads/2026/06/8K2A7949-scaled.jpg',
+    alt: 'Tax Appeals Tribunal',
+    credit: 'Tax Appeals Tribunal',
+  },
+  {
+    image: 'https://www.jsc.go.ug/wp-content/themes/jsc/img/1.jpg',
+    alt: 'Judicial Service Commission',
+    credit: 'Judicial Service Commission',
+  },
 ];
 
-// Counts up from 0 to `value` once on mount instead of just appearing — the
-// only stat this applies to is the institutions count (a real number);
-// "24/7" and "Free" aren't counts, so they're rendered as plain text.
-function StatCount({ value }) {
-  const [display, setDisplay] = useState(0);
+// Sourced from jlos.go.ug/about-jlos — kept short and paraphrased rather
+// than quoted at length; "Learn more" links out to the source for the
+// full history/roadmap instead of duplicating it here.
+const HOW_IT_WORKS = [
+  {
+    num: '1',
+    title: 'Tell us what’s going on',
+    body: 'Describe your situation in your own words, typed or spoken. No legal jargon required.',
+  },
+  {
+    num: '2',
+    title: 'Get real answers',
+    body: 'Justice AI draws on official JLOS information to explain your options and what to do next, not just a name and a phone number.',
+  },
+  {
+    num: '3',
+    title: 'Take the next step',
+    body: 'Need to act on it? Chat directly with the right institution, call its toll-free line or visit in person.',
+  },
+];
 
-  useEffect(() => {
-    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      setDisplay(value);
-      return;
-    }
-
-    let raf;
-    const duration = 900;
-    const start = performance.now();
-
-    const tick = (now) => {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - (1 - progress) ** 3;
-      setDisplay(Math.round(value * eased));
-      if (progress < 1) raf = requestAnimationFrame(tick);
-    };
-
-    raf = requestAnimationFrame(tick);
-    // Backstop for when rAF is throttled or never fires (e.g. the page
-    // loaded in a background tab) — guarantees the real number still shows
-    // up shortly after mount instead of being stuck at 0 indefinitely.
-    const fallback = setTimeout(() => setDisplay(value), duration + 150);
-    return () => { cancelAnimationFrame(raf); clearTimeout(fallback); };
-  }, [value]);
-
-  return display;
-}
-
-function InstPill({ inst }) {
+function InstTeaserCard({ inst, delay }) {
   const [logoFailed, setLogoFailed] = useState(false);
   const hasLogo = inst.logo && !logoFailed;
 
   return (
-    <a
-      className="hero-inst-pill"
+    <Reveal as="a" className="inst-teaser-card" delay={delay}
       href={inst.website}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={`${inst.short || inst.code} — visit website (opens in a new tab)`}
+      aria-label={`${inst.name} — visit website (opens in a new tab)`}
     >
-      <span className="hero-inst-pill-ic" aria-hidden="true">
+      <span className="inst-teaser-logo" style={{ background: hasLogo ? '#fff' : inst.color }}>
         {hasLogo ? (
           <img src={inst.logo} alt="" onError={() => setLogoFailed(true)} />
         ) : (
-          <InstitutionIcon type={inst.icon} color={inst.color} />
+          <InstitutionIcon type={inst.icon} color="#fff" />
         )}
       </span>
-      {inst.short || inst.code}
-    </a>
+      <span className="inst-teaser-text">
+        <b>{inst.short || inst.code}</b>
+        <span>{inst.sub}</span>
+      </span>
+      <i className="bi bi-box-arrow-up-right inst-teaser-arrow" aria-hidden="true"></i>
+    </Reveal>
   );
 }
 
@@ -102,6 +120,7 @@ export default function HomePage({ active }) {
   return (
     <section className={`page ${active ? 'active' : ''}`} id="page-home">
       <div className="hero-web">
+        <HeroSlideshow slides={HERO_SLIDES} />
         <div className="hero-web-inner">
           <div className="hero-copy">
             <div className="hero-badge-web">
@@ -116,27 +135,6 @@ export default function HomePage({ active }) {
               <span className="h1-dot"></span>
             </h1>
             <p className="hero-sub-web">{t('hero.sub')}</p>
-
-            <div className="hero-inst-pills">
-              {institutions.map((inst) => (
-                <InstPill inst={inst} key={inst.code} />
-              ))}
-            </div>
-
-            <div className="hero-stats-row">
-              {HERO_STATS.map((stat) => {
-                const isNumeric = stat.value != null && /^\d+$/.test(stat.value);
-                return (
-                  <div className="hero-stat" key={stat.key}>
-                    <span className="hero-stat-ic"><i className={`bi ${stat.icon}`}></i></span>
-                    <span className="hero-stat-text">
-                      <b>{stat.value ? (isNumeric ? <StatCount value={Number(stat.value)} /> : stat.value) : t(stat.labelKey)}</b>
-                      <span>{stat.value ? t(stat.labelKey) : t(stat.suffixKey)}</span>
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
           </div>
 
           <TiltCard className="hero-search-card" maxTilt={1.2} as="div">
@@ -187,7 +185,100 @@ export default function HomePage({ active }) {
         </div>
       </div>
 
+      {/* ============ TRUST BAR — institution quick-links + stats, ============
+          moved out of the hero so the hero itself stays focused on the
+          slideshow + search card. Institutions render as a proper card
+          grid (logo, name, role) rather than small pills — reads as a real
+          directory teaser and reflows cleanly as more institutions join. */}
+      <section className="home-section trust-bar-section">
+        <div className="home-section-inner">
+          <Reveal className="home-section-head">
+            <span className="home-eyebrow">JLOS Institutions</span>
+            <h2>Every institution, one click away.</h2>
+            <p>Tap through to any institution's own site or find its services and contact details in the directory.</p>
+          </Reveal>
 
+          <div className="inst-teaser-grid">
+            {institutions.map((inst, i) => (
+              <InstTeaserCard inst={inst} key={inst.code} delay={i * 70} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ WHAT IS JLOS ============ */}
+      <section className="home-section about-jlos-section">
+        <div className="home-section-inner">
+          <Reveal className="home-section-head">
+            <span className="home-eyebrow">About JLOS</span>
+            <h2>Uganda's justice system, working as one sector.</h2>
+            <p>
+              The Justice, Law and Order Sector (JLOS) brings together 18 institutions with closely
+              linked mandates, administering justice, maintaining law and order and promoting the
+              observance of human rights. Launched in 1999, it's one of Uganda's longest-running
+              sector-wide reform efforts and this portal is your entry point to it.
+            </p>
+            <a
+              className="about-jlos-learn-more"
+              href="https://jlos.go.ug/about-jlos/"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Learn more about JLOS
+              <i className="bi bi-arrow-right" aria-hidden="true"></i>
+            </a>
+          </Reveal>
+
+          <div className="mission-vision-row">
+            <Reveal as="div" className="mv-card" delay={80}>
+              <b>Mission</b>
+              <p>
+                To improve the safety of the person, security of property and access to justice
+                for inclusive growth with the overall goal to promote the rule of law.
+              </p>
+            </Reveal>
+            <Reveal as="div" className="mv-card" delay={160}>
+              <b>Vision</b>
+              <p>To ensure that people in Uganda live in a safe and just society.</p>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ============ HOW THIS PORTAL WORKS ============ */}
+      <section className="home-section how-it-works-section">
+        <div className="home-section-inner">
+          <Reveal className="home-section-head">
+            <span className="home-eyebrow">How JLOS Justice Portal Works?</span>
+            <h2>Three steps to real answers.</h2>
+            <p>No account, no forms to hunt for, just describe what's going on.</p>
+          </Reveal>
+
+          <div className="how-it-works-grid">
+            {HOW_IT_WORKS.map((step, i) => (
+              <Reveal as="div" className="how-step" key={step.num} delay={i * 120}>
+                <span className="how-step-num">{step.num}</span>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ CLOSING CTA ============ */}
+      <section className="home-cta-section">
+        <Reveal as="div" className="home-cta-inner">
+          <div className="home-cta-text">
+            <h2>Need help right now?</h2>
+            <p>Justice AI is online and ready to listen, describe your issue and get matched in seconds.</p>
+          </div>
+          <button type="button" className="home-cta-btn" onClick={() => goToPage('page-chat')}>
+            Chat with Justice AI
+            <i className="bi bi-arrow-right" aria-hidden="true"></i>
+          </button>
+        </Reveal>
+      </section>
     </section>
   );
 }
