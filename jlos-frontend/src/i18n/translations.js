@@ -26,11 +26,7 @@ export const translations = {
   },
 
   // ---------- hero ----------
-  'hero.badge': { English: 'One Portal · 5 Institutions · All for You', Luganda: 'Omulyango Gumu · Ebibiina 5 · Byonna gy’oli', Kiswahili: 'Lango Moja · Taasisi 5 · Vyote kwa Ajili Yako', Ateso: 'Ekot Alomit · Ijo 5 · Ijo Kesi' },
-  'hero.stat.institutions': { English: 'Institutions', Luganda: 'Ebibiina', Kiswahili: 'Taasisi', Ateso: 'Ijo' },
-  'hero.stat.support': { English: 'Support', Luganda: 'Obuyambi', Kiswahili: 'Msaada', Ateso: 'Iyupun' },
-  'hero.stat.free': { English: 'Free', Luganda: 'Ya Bwerere', Kiswahili: 'Bure', Ateso: 'Mam Ipei' },
-  'hero.stat.freeSuffix': { English: 'To Use', Luganda: 'Okukozesa', Kiswahili: 'Kutumia', Ateso: 'Aitum' },
+  'hero.badge': { English: 'One Portal · Every JLOS Institution · All for You', Luganda: 'Omulyango Gumu · Buli Kibiina kya JLOS · Byonna gy’oli', Kiswahili: 'Lango Moja · Kila Taasisi ya JLOS · Vyote kwa Ajili Yako', Ateso: 'Ekot Alomit · Ijo Ka JLOS Kesi · Ijo Kesi' },
   'hero.or': { English: 'OR', Luganda: 'OBA', Kiswahili: 'AU', Ateso: 'KOSI' },
   'hero.chatWithAi': { English: 'Chat with Justice AI', Luganda: 'Yogera ne Justice AI', Kiswahili: 'Ongea na Justice AI', Ateso: 'Lokuta ka Justice AI' },
   // Split into 3 parts (rather than one string) so the two-tone white/gold/
@@ -39,10 +35,10 @@ export const translations = {
   'hero.heading.highlight': { English: 'starts', Luganda: 'butandikira', Kiswahili: 'huanzia', Ateso: 'akitakanut' },
   'hero.heading.part2': { English: 'here.', Luganda: 'wano.', Kiswahili: 'hapa.', Ateso: 'kane.' },
   'hero.sub': {
-    English: "Describe your issue and we'll connect you to the correct JLOS institution.",
-    Luganda: 'Nnyonnyola ekizibu kyo tulikuyunga ku kibiina kya JLOS ekituufu.',
-    Kiswahili: 'Eleza tatizo lako nasi tutakuunganisha na taasisi sahihi ya JLOS.',
-    Ateso: 'Bal problem noi kani ka wok abu ijo ka JLOS naka epol.',
+    English: 'Describe your situation and Justice AI will show you a quick way to move forward.',
+    Luganda: 'Nnyonnyola embeera yo, Justice AI akulage ekkubo ery’amangu ery’okugenda mu maaso.',
+    Kiswahili: 'Eleza hali yako na Justice AI itakuonyesha njia ya haraka ya kuendelea.',
+    Ateso: 'Bal ilosit noi kani ka Justice AI ebuni ijo ekot na epol ka akiyar.',
   },
   'hero.placeholder': { English: 'Describe your legal issue...', Luganda: 'Nnyonnyola ekizibu kyo eky’amateeka...', Kiswahili: 'Eleza tatizo lako la kisheria...', Ateso: 'Bal problem lu ilosit...' },
   'hero.examplesLabel': { English: 'Examples', Luganda: 'Ebyokulabirako', Kiswahili: 'Mifano', Ateso: 'Ilekaunet' },
@@ -57,10 +53,10 @@ export const translations = {
   'hero.startHere': { English: 'Start Here', Luganda: 'Tandikira Wano', Kiswahili: 'Anzia Hapa', Ateso: 'Tandik Kane' },
   'hero.cardTitle': { English: 'How can we help you today?', Luganda: 'Tuyinza tutya okukuyamba leero?', Kiswahili: 'Tunawezaje kukusaidia leo?', Ateso: 'Ejai iyupun ijo lolo?' },
   'hero.cardSub': {
-    English: "Describe your legal issue and we'll connect you to the right JLOS institution.",
-    Luganda: 'Nnyonnyola ekizibu kyo eky’amateeka tulikuyunga ku kibiina kya JLOS ekituufu.',
-    Kiswahili: 'Eleza tatizo lako la kisheria nasi tutakuunganisha na taasisi sahihi ya JLOS.',
-    Ateso: 'Bal problem lu ilosit ka wok abu ijo ka JLOS naka epol.',
+    English: 'Describe your situation and get a quick way forward from Justice AI.',
+    Luganda: 'Nnyonnyola embeera yo ofune ekkubo ery’amangu okuva ku Justice AI.',
+    Kiswahili: 'Eleza hali yako upate njia ya haraka ya kuendelea kutoka kwa Justice AI.',
+    Ateso: 'Bal ilosit noi ka inyam ekot na epol ka akiyar ka Justice AI.',
   },
   'hero.popularExamples': { English: 'Popular Examples', Luganda: 'Ebyokulabirako Ebisinga', Kiswahili: 'Mifano Maarufu', Ateso: 'Ilekaunet Iyongan' },
   'hero.getInstantAnswers': { English: 'Get instant answers', Luganda: 'Funa Eby’okuddamu Mangu', Kiswahili: 'Pata Majibu ya Papo Hapo', Ateso: 'Rot Isuban Anyakanut' },
@@ -81,10 +77,10 @@ export const translations = {
   },
   'page.institutions.title': { English: 'JLOS Institutions', Luganda: 'Ebibiina bya JLOS', Kiswahili: 'Taasisi za JLOS', Ateso: 'Ijo ka JLOS' },
   'page.institutions.sub': {
-    English: 'All 5 institutions, one directory. Search by name or the service you need.',
-    Luganda: 'Ebibiina byonna 5, mu kalulu kamu. Noonya erinnya oba obuweereza bw’oyagala.',
-    Kiswahili: 'Taasisi zote 5, saraka moja. Tafuta kwa jina au huduma unayohitaji.',
-    Ateso: 'Ijo ka 5 kesi, alomit. Yenut ka ekiring nu akiyupun ijenu.',
+    English: 'Every JLOS institution, one directory. Search by name or the service you need.',
+    Luganda: 'Buli kibiina kya JLOS, mu kalulu kamu. Noonya erinnya oba obuweereza bw’oyagala.',
+    Kiswahili: 'Kila taasisi ya JLOS, saraka moja. Tafuta kwa jina au huduma unayohitaji.',
+    Ateso: 'Ijo ka JLOS kesi, alomit. Yenut ka ekiring nu akiyupun ijenu.',
   },
   'page.more.title': { English: 'More', Luganda: 'Ebirala', Kiswahili: 'Zaidi', Ateso: 'Ejaasi' },
   'page.more.sub': {
@@ -107,10 +103,10 @@ export const translations = {
   // ---------- footer ----------
   'footer.tagline': { English: 'Justice, Law & Order Sector', Luganda: 'Ekitongole ky’Obwenkanya, Amateeka n’Obuteefu', Kiswahili: 'Sekta ya Haki, Sheria na Utaratibu', Ateso: 'Sector ka Ainakiyar ka Ilosit' },
   'footer.desc': {
-    English: 'A single entry point to justice services across all 5 JLOS institutions — administering justice and maintaining law and order for every Ugandan.',
-    Luganda: 'Omulyango gumu ogutuusa ku buweereza bw’obwenkanya mu bibiina byonna 5 ebya JLOS — okuwa obwenkanya n’okukuuma amateeka n’obuteefu eri Omuganda yenna.',
-    Kiswahili: 'Lango moja la huduma za haki katika taasisi zote 5 za JLOS — kusimamia haki na kudumisha sheria na utaratibu kwa kila Mganda.',
-    Ateso: 'Ekot alomit ka akiyupun ka ainakiyar ijo 5 ka JLOS — akiyar ainakiyar ka akitodik ilosit ijo Uganda kesi.',
+    English: 'A single entry point to justice services across every JLOS institution — administering justice and maintaining law and order for every Ugandan.',
+    Luganda: 'Omulyango gumu ogutuusa ku buweereza bw’obwenkanya mu buli kibiina kya JLOS — okuwa obwenkanya n’okukuuma amateeka n’obuteefu eri Omuganda yenna.',
+    Kiswahili: 'Lango moja la huduma za haki katika kila taasisi ya JLOS — kusimamia haki na kudumisha sheria na utaratibu kwa kila Mganda.',
+    Ateso: 'Ekot alomit ka akiyupun ka ainakiyar ijo ka JLOS kesi — akiyar ainakiyar ka akitodik ilosit ijo Uganda kesi.',
   },
   'footer.quickLinks': { English: 'Quick Links', Luganda: 'Emikutu Emyangu', Kiswahili: 'Viungo vya Haraka', Ateso: 'Ilinki Lu' },
   'footer.institutions': { English: 'Institutions', Luganda: 'Ebibiina', Kiswahili: 'Taasisi', Ateso: 'Ijo' },

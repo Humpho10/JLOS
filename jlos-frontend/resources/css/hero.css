@@ -10,17 +10,38 @@
     position:relative; overflow:hidden;
     padding:88px 32px 64px;
   }
-  .hero-web::before{
-    content:""; position:absolute; inset:0; z-index:0;
-    background-image:url('../images/hero-bg.png');
-    background-size:cover; background-position:center;
-    filter:saturate(1.08) brightness(.99);
-  }
+  /* Navy wash over the slideshow — stronger than a single pre-graded photo
+     needed, since these are five real, ungraded photos from five different
+     institutions' own sites and need a consistent tint to stay legible and
+     on-brand regardless of which one is showing. */
   .hero-web::after{
     content:""; position:absolute; inset:0; z-index:1;
-    background:linear-gradient(180deg, rgba(15,40,68,.24) 0%, rgba(15,40,68,.2) 100%);
+    background:linear-gradient(180deg, rgba(14,42,71,.62) 0%, rgba(14,42,71,.7) 100%);
   }
   .hero-watermark-web{display:none;}
+
+  /* ============ SLIDESHOW ============ */
+  .hero-slideshow{position:absolute; inset:0; z-index:0;}
+  .hero-slide{
+    position:absolute; inset:0;
+    background-size:cover; background-position:center;
+    opacity:0; transition:opacity .7s ease;
+  }
+  .hero-slide.active{opacity:1;}
+  .hero-slide-dots{
+    position:absolute; left:50%; bottom:18px; transform:translateX(-50%); z-index:3;
+    display:flex; gap:8px;
+  }
+  @media (min-width:921px){ .hero-slide-dots{left:auto; right:32px; transform:none;} }
+  .hero-slide-dot{
+    width:8px; height:8px; padding:0; border-radius:50%; border:1.5px solid rgba(255,255,255,.65);
+    background:rgba(255,255,255,.25); cursor:pointer; transition:background .2s ease, transform .2s ease;
+  }
+  .hero-slide-dot:hover{transform:scale(1.15);}
+  .hero-slide-dot.active{background:var(--gold-2); border-color:var(--gold-2);}
+  @media (prefers-reduced-motion: reduce){
+    .hero-slide{transition:none;}
+  }
 
   .hero-web-inner{
     max-width:1180px; margin:0 auto; position:relative; z-index:2;
@@ -45,8 +66,6 @@
     .hero-badge-web{animation:heroFadeUp .6s cubic-bezier(.22,1,.36,1) both;}
     .hero-copy h1{animation:heroFadeUp .6s cubic-bezier(.22,1,.36,1) .08s both;}
     .hero-copy p.hero-sub-web{animation:heroFadeUp .6s cubic-bezier(.22,1,.36,1) .16s both;}
-    .hero-inst-pills{animation:heroFadeUp .6s cubic-bezier(.22,1,.36,1) .24s both;}
-    .hero-stats-row{animation:heroFadeUp .6s cubic-bezier(.22,1,.36,1) .32s both;}
     .hero-search-card{animation:heroFadeUp .7s cubic-bezier(.22,1,.36,1) .2s both;}
   }
 
@@ -91,38 +110,6 @@
     text-shadow:0 2px 14px rgba(0,0,0,.3);
   }
   @media (max-width:920px){ .hero-copy p.hero-sub-web{margin-left:auto; margin-right:auto;} }
-
-  /* Institution pills — shows the 8 real institutions for credibility */
-  .hero-inst-pills{display:flex; flex-wrap:wrap; justify-content:flex-start; gap:8px; margin-top:24px; max-width:560px;}
-  @media (max-width:920px){ .hero-inst-pills{justify-content:center;} }
-  .hero-inst-pill{
-    display:inline-flex; align-items:center; gap:6px;
-    background:rgba(255,255,255,.14); border:1px solid rgba(255,255,255,.28); color:#fff;
-    font-size:var(--fs-xs); font-weight:700; padding:7px 14px; border-radius:999px; cursor:pointer;
-    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
-    transition:background .15s ease, transform .15s ease;
-  }
-  .hero-inst-pill:hover{background:rgba(255,255,255,.26); transform:translateY(-1px); box-shadow:0 6px 16px rgba(0,0,0,.18);}
-  .hero-inst-pill-ic{
-    width:18px; height:18px; display:flex; align-items:center; justify-content:center; opacity:.95; flex:none;
-    border-radius:50%; background:#fff; overflow:hidden; transition:transform .25s cubic-bezier(.22,1,.36,1);
-  }
-  .hero-inst-pill:hover .hero-inst-pill-ic{transform:scale(1.15) rotate(-8deg);}
-  .hero-inst-pill-ic svg{width:68%; height:68%;}
-  .hero-inst-pill-ic img{width:100%; height:100%; object-fit:contain;}
-
-  /* Trust stats — institutions / support hours / cost, under the pills */
-  .hero-stats-row{display:flex; flex-wrap:wrap; gap:22px; margin-top:26px;}
-  @media (max-width:920px){ .hero-stats-row{justify-content:center;} }
-  .hero-stat{display:flex; align-items:center; gap:10px;}
-  .hero-stat-ic{
-    width:36px; height:36px; border-radius:50%; background:var(--stat-ic-bg); color:#fff; flex:none;
-    display:flex; align-items:center; justify-content:center; backdrop-filter:blur(6px);
-  }
-  .hero-stat-ic i{font-size:15px;}
-  .hero-stat-text{display:flex; flex-direction:column; line-height:1.25;}
-  .hero-stat-text b{color:#fff; font-size:var(--fs-base); font-weight:800; font-family:'Poppins';}
-  .hero-stat-text span{color:#D9E2EC; font-size:var(--fs-xs); font-weight:500;}
 
   /* ============ GLASSMORPHIC SEARCH CARD ============
      Fully theme-responsive: the glass tint, borders and every text

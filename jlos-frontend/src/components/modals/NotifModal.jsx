@@ -14,7 +14,7 @@ export default function NotifModal() {
       </button>
       <button type="button" className="notif-item" onClick={() => closeModal('notifModal')}>
         <div className="notif-dot" style={{ background: 'var(--line)' }} aria-hidden="true"></div>
-        <div><b>Welcome to the JLOS Justice Portal</b><span>One entry point to all 5 JLOS institutions · 3d ago</span></div>
+        <div><b>Welcome to the JLOS Justice Portal</b><span>One entry point to every JLOS institution · 3d ago</span></div>
       </button>
     </ModalShell>
   );
