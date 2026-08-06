@@ -508,16 +508,6 @@ export function AppProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [goToPage]);
 
-  // ---------- institution directory focus ----------
-  // Tapping an institution elsewhere (e.g. the home page pills) jumps to the
-  // directory with that institution's card already expanded, instead of
-  // just dropping the user on the generic unfiltered list.
-  const [focusInstitutionCode, setFocusInstitutionCode] = useState(null);
-  const goToInstitution = useCallback((code) => {
-    setFocusInstitutionCode(code);
-    goToPage('page-institutions');
-  }, [goToPage]);
-
   const value = {
     activePage, goToPage,
     isDark, toggleTheme,
@@ -537,7 +527,6 @@ export function AppProvider({ children }) {
       input: institutionChat.input, setInput: institutionChat.setInput,
       run: institutionChat.run,
     },
-    focusInstitutionCode, goToInstitution,
     user, handleRegister, handleLogin, handleLogout, handleResendVerification,
   };
 

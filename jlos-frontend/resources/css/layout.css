@@ -139,7 +139,7 @@
     background:radial-gradient(circle, rgba(228,187,82,.22), transparent 70%); pointer-events:none;
   }
   .page-head h2{
-    position:relative; font-family:'Playfair Display', serif; font-weight:700;
+    position:relative; font-family:'Poppins'; font-weight:700;
     font-size:clamp(26px, 3.4vw, 38px); color:#fff; letter-spacing:-.3px; max-width:640px;
   }
   .page-head p{position:relative; font-size:var(--fs-sm); color:#C9D6E4; margin-top:10px; line-height:1.6; max-width:560px;}

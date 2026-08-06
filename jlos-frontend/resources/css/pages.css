@@ -22,31 +22,66 @@
   .chat-page-wrap .chat-panel{flex:1 1 auto; min-height:0; height:auto; max-width:none; width:100%;}
 
   /* ============ INSTITUTION CONTACT PAGE ============ */
-  .contact-back-link{
-    background:none; border:none; padding:0; margin-bottom:14px; cursor:pointer;
-    font-size:var(--fs-xs); font-weight:700; color:#C9D6E4; transition:color .15s ease;
-  }
-  .contact-back-link:hover{color:#fff;}
+  /* Only used by the "no institution picked yet" empty state now — the
+     active chat view below uses the compact .contact-chat-bar instead. */
+  .contact-header{margin-bottom:20px; max-width:640px;}
+  .contact-header h2{font-family:'Poppins'; font-size:var(--fs-2xl); font-weight:700; color:var(--ink); letter-spacing:-.3px;}
+  .contact-header p{font-size:var(--fs-sm); color:var(--muted); margin-top:8px; line-height:1.6;}
 
-  .contact-phone-card{
-    flex:0 0 auto; display:flex; align-items:center; gap:14px; max-width:820px; width:100%; margin:0 auto 16px;
-    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:16px 20px; box-shadow:var(--shadow-sm);
+  /* WhatsApp-style contact page: drops .page-wrap's usual 1180px cap and
+     side padding so the thread genuinely fills the viewport width instead
+     of just being wider within the same capped column. */
+  .contact-page-wrap{max-width:none; margin:0; padding-left:0; padding-right:0;}
+
+  /* One compact row — back link, avatar, name, and the toll-free number —
+     instead of three stacked blocks (title band, phone card, chat header)
+     each claiming their own vertical space and squeezing the conversation
+     down to a sliver. */
+  .contact-chat-bar{
+    display:flex; align-items:center; gap:12px; flex:0 0 auto;
+    padding:10px 20px; border-bottom:1px solid var(--line);
   }
-  .contact-phone-ic{
-    width:46px; height:46px; border-radius:13px; display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+  .contact-chat-back{
+    width:34px; height:34px; border-radius:50%; flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+    background:none; border:none; color:var(--muted); cursor:pointer; transition:background .15s ease, color .15s ease;
   }
-  .contact-phone-ic svg{width:22px; height:22px;}
-  .contact-phone-text{display:flex; flex-direction:column; flex:1; min-width:0;}
-  .contact-phone-text span{font-size:var(--fs-2xs); font-weight:700; letter-spacing:.4px; text-transform:uppercase; color:var(--muted);}
-  .contact-phone-number{
-    font-family:'Poppins'; font-size:var(--fs-xl); font-weight:700; color:var(--ink); text-decoration:none; margin-top:2px;
+  .contact-chat-back:hover{background:var(--bg); color:var(--ink);}
+  .contact-chat-avatar{
+    width:38px; height:38px; border-radius:50%; flex:0 0 auto; overflow:hidden;
+    display:flex; align-items:center; justify-content:center;
   }
-  .contact-phone-number:hover{color:var(--accent);}
-  .contact-call-btn{
-    flex:0 0 auto; background:var(--grad-navy); color:#fff; text-decoration:none; font-size:var(--fs-sm); font-weight:700;
-    padding:11px 20px; border-radius:12px; box-shadow:0 6px 14px rgba(14,42,71,.25); transition:transform .15s ease;
+  .contact-chat-avatar img{width:100%; height:100%; object-fit:contain;}
+  .contact-chat-avatar svg{width:18px; height:18px;}
+  .contact-chat-identity{display:flex; flex-direction:column; min-width:0; flex:1;}
+  .contact-chat-name{font-family:'Poppins'; font-size:var(--fs-sm); font-weight:700; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .contact-chat-phone{
+    display:inline-flex; align-items:center; gap:5px; font-size:var(--fs-2xs); color:var(--muted); text-decoration:none; margin-top:1px; width:fit-content;
   }
-  .contact-call-btn:hover{transform:translateY(-1px);}
+  .contact-chat-phone:hover{color:var(--accent);}
+
+  /* Plain, full-width, unboxed thread — no card background/border/shadow
+     and no max-width cap. Deliberately separate from .chat-panel (the AI
+     chat page's boxed, width-capped design) rather than reusing it. */
+  .contact-chat-body{
+    flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:18px 20px;
+    display:flex; flex-direction:column; gap:14px;
+  }
+  .contact-chat-input{
+    border-top:1px solid var(--line); padding:12px 20px; display:flex; gap:12px; align-items:flex-end; flex:0 0 auto;
+  }
+  .contact-chat-input textarea{
+    flex:1; border:1px solid var(--line); background:var(--bg); color:var(--text); border-radius:20px;
+    padding:14px 20px; font-size:var(--fs-base); outline:none; font-family:inherit; line-height:1.5;
+    resize:none; min-height:50px; max-height:200px; overflow-y:auto;
+    display:flex; align-items:center;
+    scrollbar-width:none; -ms-overflow-style:none; /* Firefox / old Edge */
+  }
+  .contact-chat-input textarea::-webkit-scrollbar{display:none; width:0; height:0;}
+  @media (max-width:640px){
+    .contact-chat-bar{padding:8px 14px;}
+    .contact-chat-body{padding:14px;}
+    .contact-chat-input{padding:10px 14px;}
+  }
 
   .chat-panel{
     max-width:820px; margin:0 auto; background:var(--card); border:1px solid var(--line); border-radius:22px;
@@ -64,9 +99,13 @@
     flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:28px 40px;
     display:flex; flex-direction:column; gap:14px;
   }
-  .msg{max-width:62%; padding:12px 17px; border-radius:16px; font-size:var(--fs-base); line-height:1.6;}
+  /* overflow-wrap so a long unbroken run of characters (no spaces to wrap
+     at — e.g. a pasted URL or someone just holding a key down) breaks
+     inside the bubble instead of overflowing it and dragging a horizontal
+     scrollbar into the whole conversation. */
+  .msg{max-width:62%; padding:12px 17px; border-radius:16px; font-size:var(--fs-base); line-height:1.6; overflow-wrap:break-word; word-break:break-word;}
   .msg.bot{align-self:flex-start; background:var(--bg); border:1px solid var(--line); border-top-left-radius:5px; color:var(--text); white-space:pre-wrap;}
-  .msg.user{align-self:flex-end; background:var(--navy); color:#fff; border-top-right-radius:5px;}
+  .msg.user{align-self:flex-end; background:var(--navy); color:#fff; border-top-right-radius:5px; white-space:pre-wrap;}
   .msg.user .msg-time{display:block; text-align:right; margin-top:4px; font-size:var(--fs-2xs); color:rgba(255,255,255,.65);}
   .msg-user-actions{display:flex; gap:2px; justify-content:flex-end; margin-bottom:4px;}
   .msg-user-actions .speak-btn{color:rgba(255,255,255,.7);}
@@ -236,34 +275,44 @@
     display:flex; gap:10px; align-items:center; box-shadow:var(--shadow-sm);
   }
   .inst-search-web input{border:none; outline:none; background:transparent; color:var(--text); font-size:var(--fs-sm); flex:1;}
-  .inst-grid-web{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:18px; margin-top:26px;}
-  .inst-card{background:var(--card); border:1px solid var(--line); border-radius:18px; padding:18px; box-shadow:var(--shadow-sm);}
-  .inst-card .ic-top{display:flex; align-items:center; gap:12px; cursor:pointer; transition:transform .12s ease;}
+
+  /* Vertical list of full-width rows instead of a card grid — every
+     institution lists a different number of services, and a multi-column
+     grid stretched every card in a row to match the tallest one, leaving
+     ragged empty space in its shorter neighbors. Independent rows sidestep
+     that entirely, and read more like a directory listing than a card wall. */
+  .inst-list-web{display:flex; flex-direction:column; gap:14px; margin-top:26px;}
+  .inst-row{
+    display:flex; align-items:center; flex-wrap:wrap; gap:20px;
+    background:var(--card); border:1px solid var(--line); border-radius:18px; padding:20px 22px;
+    box-shadow:var(--shadow-sm); transition:border-color .18s ease, box-shadow .18s ease;
+  }
+  .inst-row:hover{border-color:var(--accent-2); box-shadow:var(--shadow-md);}
+
+  .inst-row-head{display:flex; align-items:center; gap:12px; flex:0 0 auto; width:260px; max-width:100%;}
   .ic-logo{width:44px; height:44px; border-radius:13px; flex:0 0 auto; display:flex; align-items:center; justify-content:center;}
   .ic-logo svg{width:21px; height:21px; stroke:#fff;}
   .ic-logo img{width:100%; height:100%; object-fit:contain; border-radius:13px; background:#fff;}
   .ic-name{font-family:'Poppins'; font-size:var(--fs-sm); font-weight:700; color:var(--ink);}
   .ic-sub{font-size:var(--fs-xs); color:var(--muted); margin-top:2px;}
-  .ic-chev{margin-left:auto; color:var(--muted); transition:transform .2s;}
-  .inst-card.open .ic-chev{transform:rotate(180deg);}
-  /* Animated expand/collapse — max-height is set inline by InstitutionCard
-     from the inner wrapper's measured scrollHeight, then transitions like
-     any other property. (The CSS-only grid 0fr/1fr trick doesn't reliably
-     expand here — this component already sits inside the institutions
-     grid's own layout, and nesting it another level deep kept collapsing
-     back to ~1px instead of sizing to content, even with the row forced
-     inline — so this uses the more predictable JS-measured approach instead.) */
-  .ic-services{
-    overflow:hidden; max-height:0;
-    transition:max-height .35s cubic-bezier(.22,1,.36,1);
+
+  .inst-row-services{
+    display:flex; flex-wrap:wrap; gap:7px; flex:1 1 320px; min-width:0;
+    padding:0 8px; border-left:1px solid var(--line); border-right:1px solid var(--line);
   }
-  .ic-services-inner{
-    margin-top:0; padding-top:0; border-top:1px dashed transparent;
-    transition:margin-top .3s cubic-bezier(.22,1,.36,1), padding-top .3s cubic-bezier(.22,1,.36,1), border-color .25s ease;
+  .svc-chip{display:inline-block; background:var(--bg); border:1px solid var(--line); color:var(--ink); font-size:var(--fs-xs); font-weight:600; padding:7px 12px; border-radius:999px;}
+
+  .inst-row-actions{display:flex; gap:10px; flex:0 0 auto; margin-left:auto;}
+  .inst-row-actions .mc-btn{padding:10px 20px; white-space:nowrap;}
+
+  @media (max-width:860px){
+    .inst-row{padding:18px;}
+    .inst-row-head{width:100%;}
+    .inst-row-services{border:none; padding:0; order:3; width:100%;}
+    .inst-row-actions{order:2; width:100%; margin-left:0;}
+    .inst-row-actions .mc-btn{flex:1;}
   }
-  .inst-card.open .ic-services-inner{margin-top:14px; padding-top:14px; border-top-color:var(--line);}
-  .svc-chip{display:inline-block; background:var(--bg); border:1px solid var(--line); color:var(--ink); font-size:var(--fs-xs); font-weight:600; padding:7px 12px; border-radius:999px; margin:0 7px 7px 0;}
-  .ic-actions{display:flex; gap:10px; margin-top:12px;}
+
   .no-results{text-align:center; padding:60px 20px; color:var(--muted); font-size:var(--fs-sm); display:none;}
   /* ============ TRACK PAGE ============ */
   .track-grid-web{display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:18px; margin-top:8px;}
