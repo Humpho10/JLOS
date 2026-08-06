@@ -1,10 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import InstitutionCard from '../components/InstitutionCard.jsx';
 import { institutions } from '../data/institutions.js';
-import { useApp } from '../context/AppContext.jsx';
 
 export default function InstitutionsPage({ active }) {
-  const { t, focusInstitutionCode } = useApp();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -16,23 +14,9 @@ export default function InstitutionsPage({ active }) {
     });
   }, [query]);
 
-  // Jumped here from elsewhere (e.g. a home page institution pill) with a
-  // specific institution in mind — scroll straight to its card once this
-  // page is actually visible, instead of leaving the user at the top of
-  // the full, unfiltered list.
-  useEffect(() => {
-    if (!active || !focusInstitutionCode) return;
-    const el = document.getElementById(`inst-${focusInstitutionCode}`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [active, focusInstitutionCode]);
-
   return (
     <section className={`page ${active ? 'active' : ''}`} id="page-institutions">
       <div className="page-wrap">
-        <div className="page-head">
-          <h2>{t('page.institutions.title')}</h2>
-          <p>{t('page.institutions.sub')}</p>
-        </div>
         <div className="inst-search-web" role="search">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6B7480" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4.3-4.3" /></svg>
           <input
@@ -44,9 +28,9 @@ export default function InstitutionsPage({ active }) {
             onChange={(e) => setQuery(e.target.value)}
           />
         </div>
-        <div className="inst-grid-web" id="instListWeb">
+        <div className="inst-list-web" id="instListWeb">
           {filtered.map((inst) => (
-            <InstitutionCard inst={inst} key={inst.code} autoOpen={inst.code === focusInstitutionCode} />
+            <InstitutionCard inst={inst} key={inst.code} />
           ))}
         </div>
         {filtered.length === 0 && (

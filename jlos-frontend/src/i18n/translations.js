@@ -75,13 +75,6 @@ export const translations = {
     Kiswahili: 'Eleza tatizo lako kwa maneno yako — tutakulinganisha na taasisi sahihi, na kukupatia mtu ikiwa unahitaji.',
     Ateso: 'Bal problem noi ka ibala lu ijo — wok abu ijo naka epol, ka iwok itunga ka ijenut.',
   },
-  'page.institutions.title': { English: 'JLOS Institutions', Luganda: 'Ebibiina bya JLOS', Kiswahili: 'Taasisi za JLOS', Ateso: 'Ijo ka JLOS' },
-  'page.institutions.sub': {
-    English: 'Every JLOS institution, one directory. Search by name or the service you need.',
-    Luganda: 'Buli kibiina kya JLOS, mu kalulu kamu. Noonya erinnya oba obuweereza bw’oyagala.',
-    Kiswahili: 'Kila taasisi ya JLOS, saraka moja. Tafuta kwa jina au huduma unayohitaji.',
-    Ateso: 'Ijo ka JLOS kesi, alomit. Yenut ka ekiring nu akiyupun ijenu.',
-  },
   'page.more.title': { English: 'More', Luganda: 'Ebirala', Kiswahili: 'Zaidi', Ateso: 'Ejaasi' },
   'page.more.sub': {
     English: 'Access, language, support & help options.',
