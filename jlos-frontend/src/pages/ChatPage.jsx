@@ -35,7 +35,10 @@ function FileMsg({ msg }) {
   );
 }
 
-function ChatMessage({ msg, speakingId, onToggleSpeak, copiedId, onCopy }) {
+function ChatMessage({
+  msg, speakingId, onToggleSpeak, copiedId, onCopy,
+  editingId, editDraft, onEditDraftChange, onEditStart, onSaveEdit, onCancelEdit,
+}) {
   if (msg.kind === 'typing') {
     return (
       <div className="msg bot typing-wrap">
@@ -48,8 +51,63 @@ function ChatMessage({ msg, speakingId, onToggleSpeak, copiedId, onCopy }) {
   if (msg.kind === 'file-msg') return <FileMsg msg={msg} />;
   if (msg.kind === 'user') {
     const time = formatTime(msg.time);
+    const isCopied = copiedId === msg.id;
+
+    if (editingId === msg.id) {
+      return (
+        <div className="msg user editing">
+          <textarea
+            className="msg-edit-textarea"
+            value={editDraft}
+            onChange={(e) => onEditDraftChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSaveEdit(); }
+              if (e.key === 'Escape') onCancelEdit();
+            }}
+            rows={2}
+            autoFocus
+            aria-label="Edit your question"
+          />
+          <div className="msg-edit-actions">
+            <button type="button" className="mc-btn ghost" onClick={onCancelEdit}>Cancel</button>
+            <button type="button" className="mc-btn primary" onClick={onSaveEdit}>Save &amp; resend</button>
+          </div>
+        </div>
+      );
+    }
+
     return (
       <div className="msg user">
+        <div className="msg-user-actions">
+          <button
+            type="button"
+            className="speak-btn"
+            title={isCopied ? 'Copied!' : 'Copy'}
+            aria-label={isCopied ? 'Copied to clipboard' : 'Copy your message'}
+            onClick={() => onCopy(msg.id, msg.text)}
+          >
+            {isCopied ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                <rect x="9" y="9" width="13" height="13" rx="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            )}
+          </button>
+          <button
+            type="button"
+            className="speak-btn"
+            title="Edit and resend"
+            aria-label="Edit and resend this message"
+            onClick={() => onEditStart(msg.id, msg.text)}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+            </svg>
+          </button>
+        </div>
         {msg.text}
         {time && <div className="msg-time">{time}</div>}
       </div>
@@ -115,6 +173,8 @@ export default function ChatPage({ active }) {
   const inputRef = useRef(null);
   const [speakingId, setSpeakingId] = useState(null);
   const [copiedId, setCopiedId] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [editDraft, setEditDraft] = useState('');
 
   useEffect(() => {
     if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
@@ -169,9 +229,26 @@ export default function ChatPage({ active }) {
       .catch(() => pushToast('Could not copy — try selecting the text instead.'));
   }, [pushToast]);
 
+  const startEdit = useCallback((id, text) => {
+    setEditingId(id);
+    setEditDraft(text);
+  }, []);
+
+  const cancelEdit = useCallback(() => {
+    setEditingId(null);
+    setEditDraft('');
+  }, []);
+
+  const saveEdit = useCallback(() => {
+    if (!editDraft.trim()) return;
+    chat.editMessage(editingId, editDraft);
+    setEditingId(null);
+    setEditDraft('');
+  }, [chat, editingId, editDraft]);
+
   const { listening, toggle: toggleVoiceInput } = useVoiceInput({
     onTranscript: (text) => chat.setChatInput(text),
-    onFinish: (text) => chat.runChatDemo(text),
+    onFinish: (text) => chat.sendMessage(text),
     onNoSupport: () => pushToast('Voice input needs a browser like Chrome or Edge.'),
     onError: () => pushToast("Didn't catch that — try again."),
   });
@@ -208,54 +285,80 @@ export default function ChatPage({ active }) {
                 onToggleSpeak={toggleSpeak}
                 copiedId={copiedId}
                 onCopy={copyReply}
+                editingId={editingId}
+                editDraft={editDraft}
+                onEditDraftChange={setEditDraft}
+                onEditStart={startEdit}
+                onSaveEdit={saveEdit}
+                onCancelEdit={cancelEdit}
               />
             ))}
           </div>
-          <div className="chat-panel-input">
-            <input
-              type="file"
-              id="chatFileInputWeb"
-              accept="image/*,.pdf"
-              style={{ display: 'none' }}
-              ref={fileInputRef}
-              onChange={(e) => {
-                chat.handleFileAttach(e.target.files && e.target.files[0]);
-                e.target.value = '';
-              }}
-            />
-            <button type="button" className="attach-btn" title="Attach an image or PDF" aria-label="Attach an image or PDF" onClick={() => fileInputRef.current && fileInputRef.current.click()}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.19 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>
-            </button>
-            <textarea
-              id="chatInputWeb"
-              ref={inputRef}
-              rows={1}
-              aria-label="Type your message"
-              placeholder={listening ? 'Listening…' : 'Type your problem here...'}
-              value={chat.chatInput}
-              onChange={(e) => chat.setChatInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  chat.runChatDemo();
-                }
-              }}
-            />
-            <button
-              type="button"
-              className={`mic-btn ${listening ? 'listening' : ''}`}
-              title="Speak your message"
-              aria-label="Speak your message"
-              aria-pressed={listening}
-              onClick={toggleVoiceInput}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                <rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8" />
-              </svg>
-            </button>
-            <button type="button" className="send-btn" aria-label="Send message" onClick={() => chat.runChatDemo()}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M2 21l21-9L2 3v7l15 2-15 2z" /></svg>
-            </button>
+          <div className="chat-compose">
+            {chat.pendingAttachment && (
+              <div className="attachment-preview">
+                {chat.pendingAttachment.isImage ? (
+                  <img src={chat.pendingAttachment.url} alt="" />
+                ) : (
+                  <div className="ap-ic">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /><path d="M9 13h6M9 17h6" /></svg>
+                  </div>
+                )}
+                <div className="ap-info">
+                  <div className="ap-name">{chat.pendingAttachment.name}</div>
+                  <div className="ap-type">{chat.pendingAttachment.typeLabel}</div>
+                </div>
+                <button type="button" className="ap-remove" aria-label="Remove attachment" onClick={chat.clearAttachment}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                </button>
+              </div>
+            )}
+            <div className="chat-panel-input">
+              <input
+                type="file"
+                id="chatFileInputWeb"
+                accept="image/*,.pdf"
+                style={{ display: 'none' }}
+                ref={fileInputRef}
+                onChange={(e) => {
+                  chat.attachFile(e.target.files && e.target.files[0]);
+                  e.target.value = '';
+                }}
+              />
+              <button type="button" className="attach-btn" title="Attach an image or PDF" aria-label="Attach an image or PDF" onClick={() => fileInputRef.current && fileInputRef.current.click()}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M21.44 11.05l-9.19 9.19a5 5 0 0 1-7.07-7.07l9.19-9.19a3.5 3.5 0 0 1 4.95 4.95l-9.19 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></svg>
+              </button>
+              <textarea
+                id="chatInputWeb"
+                ref={inputRef}
+                rows={1}
+                aria-label="Type your message"
+                placeholder={chat.pendingAttachment ? 'Add a note about this file (optional)...' : listening ? 'Listening…' : 'Type your problem here...'}
+                value={chat.chatInput}
+                onChange={(e) => chat.setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    chat.sendMessage();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                className={`mic-btn ${listening ? 'listening' : ''}`}
+                title="Speak your message"
+                aria-label="Speak your message"
+                aria-pressed={listening}
+                onClick={toggleVoiceInput}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                  <rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8" />
+                </svg>
+              </button>
+              <button type="button" className="send-btn" aria-label="Send message" onClick={() => chat.sendMessage()}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M2 21l21-9L2 3v7l15 2-15 2z" /></svg>
+              </button>
+            </div>
           </div>
         </div>
       </div>

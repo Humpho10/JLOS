@@ -106,9 +106,23 @@ export async function fetchCurrentConversation(guestToken) {
   return res.json();
 }
 
-// Reads an attached image/PDF and returns a short description of it — the
-// caller drops that into the chat input the same way it does a voice
-// transcript, before it goes through the normal search-and-answer flow.
+// Drops every message in a conversation from `sinceIso` onward — backs the
+// "edit a past question" flow, which needs the AI's memory of the old
+// question/answer erased, not just hidden in the UI.
+export async function truncateConversation(conversationId, sinceIso, guestToken) {
+  const res = await fetch(`${API_URL}/api/conversations/${conversationId}/messages`, {
+    method: 'DELETE',
+    headers: authHeaders({ 'Content-Type': 'application/json', Accept: 'application/json' }),
+    body: JSON.stringify({ since: sinceIso, guest_token: guestToken }),
+  });
+  if (!res.ok) throw new ApiError('Could not update the conversation.', res.status);
+  return res.json();
+}
+
+// Reads an attached image/PDF's real content (extracted text for a PDF, an
+// AI-generated description for an image) — the caller feeds that to the AI
+// as grounding context alongside whatever the user typed, rather than
+// showing it as if the user had said it themselves.
 export async function interpretAttachment(file) {
   const form = new FormData();
   form.append('attachment', file);
@@ -129,9 +143,9 @@ export async function interpretAttachment(file) {
 
   const data = await res.json().catch(() => null);
 
-  if (!res.ok || !data?.description) {
+  if (!res.ok || !data?.content) {
     throw new ApiError(data?.error || 'Could not read that file. Please try again.', res.status);
   }
 
-  return data.description;
+  return data.content;
 }

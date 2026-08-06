@@ -24,6 +24,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::get('/conversations/current', [ConversationController::class, 'current']);
+Route::delete('/conversations/{conversation}/messages', [ConversationController::class, 'truncate']);
 Route::get('/institutions', [InstitutionController::class, 'index']);
 Route::post('/institutions/{slug}/chat', [InstitutionChatController::class, 'chat']);
 Route::post('/institutions/{slug}/chat/stream', [InstitutionChatController::class, 'stream']);
