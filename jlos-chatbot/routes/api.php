@@ -2,6 +2,8 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Admin\AdminInstitutionController;
+use App\Http\Controllers\Admin\AdminInstitutionPageController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\ChatController;
@@ -21,6 +23,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/email/verification-notification', [EmailVerificationController::class, 'resend'])
         ->middleware('throttle:6,1');
+});
+
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    Route::get('/institutions', [AdminInstitutionController::class, 'index']);
+    Route::post('/institutions', [AdminInstitutionController::class, 'store']);
+    Route::put('/institutions/{institution}', [AdminInstitutionController::class, 'update']);
+    Route::delete('/institutions/{institution}', [AdminInstitutionController::class, 'destroy']);
+    Route::post('/institutions/{institution}/scrape', [AdminInstitutionController::class, 'scrape']);
+    Route::get('/institutions/{institution}/scrape-runs/latest', [AdminInstitutionController::class, 'latestScrapeRun']);
+
+    Route::get('/institutions/{institution}/pages', [AdminInstitutionPageController::class, 'index']);
+    Route::post('/institutions/{institution}/pages', [AdminInstitutionPageController::class, 'store']);
+    Route::put('/institutions/{institution}/pages/{page}', [AdminInstitutionPageController::class, 'update']);
+    Route::delete('/institutions/{institution}/pages/{page}', [AdminInstitutionPageController::class, 'destroy']);
 });
 
 Route::get('/conversations/current', [ConversationController::class, 'current']);

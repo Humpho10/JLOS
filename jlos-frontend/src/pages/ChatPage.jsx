@@ -167,7 +167,7 @@ function ChatMessage({
 }
 
 export default function ChatPage({ active }) {
-  const { chat, pushToast, t, user, handleResendVerification } = useApp();
+  const { chat, pushToast, t } = useApp();
   const bodyRef = useRef(null);
   const fileInputRef = useRef(null);
   const inputRef = useRef(null);
@@ -176,9 +176,14 @@ export default function ChatPage({ active }) {
   const [editingId, setEditingId] = useState(null);
   const [editDraft, setEditDraft] = useState('');
 
+  // Also re-run when `active` flips true: other pages stay mounted (just
+  // CSS-hidden) while inactive, so a message arriving while this page is
+  // hidden measures scrollHeight as 0 and this is a no-op — switching back
+  // to the chat page doesn't itself change `chat.messages`, so without this
+  // dependency the view is left stranded at the top until the next message.
   useEffect(() => {
     if (bodyRef.current) bodyRef.current.scrollTop = bodyRef.current.scrollHeight;
-  }, [chat.messages]);
+  }, [chat.messages, active]);
 
   // Auto-grow the compose box as the user types, up to a max height
   // enforced in CSS (past which it scrolls internally instead of growing).
@@ -270,12 +275,6 @@ export default function ChatPage({ active }) {
               <p id="chatStatusWeb" role="status" aria-live="polite">{chat.chatStatus}</p>
             </div>
           </div>
-          {user && !user.email_verified_at && (
-            <div className="verify-banner" role="status">
-              <span>Verify your email to secure your account — check your inbox for the link.</span>
-              <button type="button" onClick={handleResendVerification}>Resend</button>
-            </div>
-          )}
           <div className="chat-panel-body" id="chatBodyWeb" ref={bodyRef} role="log" aria-live="polite" aria-label="Conversation">
             {chat.messages.map((m) => (
               <ChatMessage
