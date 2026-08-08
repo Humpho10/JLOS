@@ -1,11 +1,10 @@
 import React from 'react';
 import { useApp } from '../context/AppContext.jsx';
 import { NAV_ITEMS } from '../data/navItems.js';
-import { institutions } from '../data/institutions.js';
 import { pressable } from '../utils/a11y.js';
 
 export default function Footer() {
-  const { goToPage, openModal, t } = useApp();
+  const { goToPage, openModal, t, institutions } = useApp();
   const year = new Date().getFullYear();
 
   return (

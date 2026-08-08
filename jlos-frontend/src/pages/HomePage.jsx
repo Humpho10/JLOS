@@ -3,7 +3,6 @@ import HeroSlideshow from '../components/HeroSlideshow.jsx';
 import Reveal from '../components/Reveal.jsx';
 import TiltCard from '../components/TiltCard.jsx';
 import { useApp } from '../context/AppContext.jsx';
-import { institutions } from '../data/institutions.js';
 import { useVoiceInput } from '../hooks/useVoiceInput.js';
 import InstitutionIcon from '../utils/InstitutionIcon.jsx';
 
@@ -99,7 +98,7 @@ function InstTeaserCard({ inst, delay }) {
 ];*/
 
 export default function HomePage({ active }) {
-  const { goToPage, openModal, chat, pushToast, t } = useApp();
+  const { goToPage, openModal, chat, pushToast, t, institutions } = useApp();
   const [query, setQuery] = useState('');
 
   const submitQuery = () => {

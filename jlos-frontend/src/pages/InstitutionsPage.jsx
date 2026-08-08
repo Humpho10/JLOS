@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import InstitutionCard from '../components/InstitutionCard.jsx';
-import { institutions } from '../data/institutions.js';
+import { useApp } from '../context/AppContext.jsx';
 
 export default function InstitutionsPage({ active }) {
+  const { institutions } = useApp();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -12,7 +13,7 @@ export default function InstitutionsPage({ active }) {
       const haystack = (inst.name + ' ' + inst.sub + ' ' + inst.services.join(' ')).toLowerCase();
       return haystack.includes(q);
     });
-  }, [query]);
+  }, [query, institutions]);
 
   return (
     <section className={`page ${active ? 'active' : ''}`} id="page-institutions">

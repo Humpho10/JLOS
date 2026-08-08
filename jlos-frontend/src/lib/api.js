@@ -149,3 +149,70 @@ export async function interpretAttachment(file) {
 
   return data.content;
 }
+
+// ============================================================
+// Admin — institution management. Every call here requires an
+// admin-role Bearer token; the backend's `admin` middleware
+// rejects anyone else with a 403 regardless of what the frontend
+// does, so these functions rely on authHeaders() the same way
+// the rest of this file does.
+// ============================================================
+
+async function adminRequest(path, options = {}) {
+  const res = await fetch(`${API_URL}/api/admin${path}`, {
+    ...options,
+    headers: authHeaders({ 'Content-Type': 'application/json', Accept: 'application/json', ...options.headers }),
+  });
+
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    const message = data?.message || Object.values(data?.errors || {})[0]?.[0] || 'Something went wrong.';
+    throw new ApiError(message, res.status);
+  }
+
+  return data;
+}
+
+export function fetchAdminInstitutions() {
+  return adminRequest('/institutions');
+}
+
+export function createAdminInstitution(payload) {
+  return adminRequest('/institutions', { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export function updateAdminInstitution(id, payload) {
+  return adminRequest(`/institutions/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+}
+
+export function deleteAdminInstitution(id) {
+  return adminRequest(`/institutions/${id}`, { method: 'DELETE' });
+}
+
+export function fetchAdminInstitutionPages(institutionId) {
+  return adminRequest(`/institutions/${institutionId}/pages`);
+}
+
+export function createAdminInstitutionPage(institutionId, payload) {
+  return adminRequest(`/institutions/${institutionId}/pages`, { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export function updateAdminInstitutionPage(institutionId, pageId, payload) {
+  return adminRequest(`/institutions/${institutionId}/pages/${pageId}`, { method: 'PUT', body: JSON.stringify(payload) });
+}
+
+export function deleteAdminInstitutionPage(institutionId, pageId) {
+  return adminRequest(`/institutions/${institutionId}/pages/${pageId}`, { method: 'DELETE' });
+}
+
+// Queues a background scrape + embed run for this institution; the backend
+// responds immediately with the queued run record, then does the actual
+// work asynchronously — callers should poll fetchLatestScrapeRun().
+export function triggerAdminScrape(institutionId) {
+  return adminRequest(`/institutions/${institutionId}/scrape`, { method: 'POST' });
+}
+
+export function fetchLatestScrapeRun(institutionId) {
+  return adminRequest(`/institutions/${institutionId}/scrape-runs/latest`);
+}
