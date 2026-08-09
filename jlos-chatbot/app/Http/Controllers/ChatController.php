@@ -6,10 +6,13 @@ use App\Ai\Agents\AttachmentInterpreterAgent;
 use App\Ai\Agents\GeneralAgent;
 use App\Http\Controllers\Concerns\ManagesConversations;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Str;
 use Laravel\Ai\Exceptions\ProviderOverloadedException;
 use Laravel\Ai\Exceptions\RateLimitedException;
 use Laravel\Ai\Streaming\Events\Error as AiStreamError;
 use Laravel\Ai\Streaming\Events\TextDelta;
+use Smalot\PdfParser\Parser as PdfParser;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
@@ -133,10 +136,13 @@ class ChatController extends Controller
     }
 
     /**
-     * Reads an attached image/PDF and turns it into a short descriptive
-     * sentence — the frontend drops that into the chat input the same way
-     * it does a voice transcript, so the user can review/edit it before it
-     * goes through the normal search-and-answer flow.
+     * Reads an attached image/PDF's real content, so it can be used as
+     * grounding context for the actual question — a PDF's text is extracted
+     * directly (no AI round-trip needed for that); an image still goes
+     * through the AI since there's no text to parse out of a photo. This
+     * used to hand back a one-sentence description phrased as if the user
+     * had said it themselves, which meant the AI only ever saw a vague
+     * gloss of the file instead of what it actually contains.
      */
     public function interpretAttachment(Request $request)
     {
@@ -144,8 +150,12 @@ class ChatController extends Controller
             'attachment' => 'required|file|mimes:jpg,jpeg,png,webp,pdf|max:8192',
         ]);
 
+        $file = $request->file('attachment');
+
         try {
-            $response = (new AttachmentInterpreterAgent)->respond([$request->file('attachment')]);
+            $content = strtolower($file->getClientOriginalExtension()) === 'pdf'
+                ? $this->extractPdfText($file)
+                : trim((new AttachmentInterpreterAgent)->respond([$file])->text);
         } catch (RateLimitedException $e) {
             return response()->json(['error' => "I'm getting rate limited by the AI provider right now. Please wait a bit and try again."], 429);
         } catch (ProviderOverloadedException $e) {
@@ -156,6 +166,20 @@ class ChatController extends Controller
             return response()->json(['error' => 'Could not read that file. Please try again or describe it yourself.'], 500);
         }
 
-        return response()->json(['description' => trim($response->text)]);
+        if ($content === '') {
+            return response()->json(['error' => "Could not find any readable text in that file — it might be a scanned image with no selectable text. Please describe it yourself instead."], 422);
+        }
+
+        return response()->json(['content' => $content]);
+    }
+
+    protected function extractPdfText(UploadedFile $file): string
+    {
+        $pdf = (new PdfParser())->parseContent(file_get_contents($file->getRealPath()));
+        $text = trim(preg_replace('/\s+/', ' ', $pdf->getText()));
+
+        // A full multi-page PDF could otherwise blow up the prompt sent to
+        // the main agent — this is plenty for it to work with either way.
+        return Str::limit($text, 6000, '... [truncated]');
     }
 }

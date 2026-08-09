@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { translations } from '../i18n/translations.js';
-import { fetchInstitutions, fetchCurrentConversation, sendMessageStream, interpretAttachment, ApiError } from '../lib/api.js';
+import { fetchInstitutions, fetchCurrentConversation, sendMessageStream, interpretAttachment, truncateConversation, ApiError } from '../lib/api.js';
 import { getGuestToken } from '../lib/guestToken.js';
 import { fetchMe, register, login, logout, resendVerification } from '../lib/auth.js';
 
@@ -115,16 +115,26 @@ function useChatSession({
   }, []);
 
   // `overrideText`, when given, is used instead of the current `input`
-  // state — needed by findService()/handleFileAttach(), which set the
-  // input and immediately send it in the same tick (before React
-  // re-renders `input`).
-  const run = useCallback((overrideText) => {
+  // state — needed by findService()/sendMessage(), which set the input
+  // and immediately send it in the same tick (before React re-renders
+  // `input`).
+  //
+  // `displayText`, when given, is shown in the user's chat bubble instead
+  // of `text` — needed when an attachment's extracted content is folded
+  // into the actual query sent to the AI, so the visible message stays
+  // just whatever the user typed instead of that extracted content too.
+  // If it resolves empty (a file sent with no caption), no bubble is
+  // added at all — the attachment chip already stands for that turn.
+  const run = useCallback((overrideText, displayText) => {
     const text = (overrideText !== undefined ? overrideText : input).trim();
     if (!text) return;
 
     const { name, avatar } = resolveBotMeta();
 
-    addMessage({ kind: 'user', text });
+    const shown = (displayText !== undefined ? displayText : text).trim();
+    if (shown) {
+      addMessage({ kind: 'user', text: shown });
+    }
     setInput('');
     setStatus(typingStatus);
     addTyping();
@@ -179,11 +189,35 @@ function useChatSession({
       });
   }, [input, streamFn, resolveBotMeta, addMessage, addTyping, removeTyping, appendToMessage, typingStatus, idleStatus, conversationId, guestToken]);
 
+  // Edits a past question in place: drops it and everything after it (both
+  // here and, if this session is backed by a real persisted conversation,
+  // on the server too — otherwise the AI's next reply would still be
+  // shaped by the un-edited version), then resends the edited text as a
+  // fresh turn via the normal run() flow.
+  const editMessage = useCallback((id, newText) => {
+    const text = newText.trim();
+    if (!text) return;
+
+    const idx = messages.findIndex((m) => m.id === id);
+    if (idx === -1) return;
+
+    const target = messages[idx];
+    if (conversationId && target.time) {
+      truncateConversation(conversationId, new Date(target.time).toISOString(), guestToken).catch(() => {
+        // Best-effort — the visible chat still updates below even if this
+        // fails, so a flaky request here shouldn't block editing.
+      });
+    }
+
+    setMessages((prev) => prev.slice(0, idx));
+    run(text);
+  }, [messages, conversationId, guestToken, run]);
+
   return {
     messages, status, setStatus,
     input, setInput,
     addMessage, addTyping, removeTyping, appendToMessage,
-    run, reset, hydrate,
+    run, reset, hydrate, editMessage,
   };
 }
 
@@ -361,11 +395,13 @@ export function AppProvider({ children }) {
     }, 300);
   }, [goToPage, generalChat]);
 
-  // Reads the attached image/PDF into a short description and feeds it
-  // through the same run() flow as typed or spoken input — the same
-  // "whatever gets you text into the box becomes the query" pattern
-  // used by voice input.
-  const handleFileAttach = useCallback((file) => {
+  // Attaching a file no longer sends it immediately — it just sits as a
+  // pending attachment (shown as a preview chip in the compose area) until
+  // the user actually hits send, the same way ChatGPT lets you add a
+  // caption/question alongside a file before it goes out.
+  const [pendingAttachment, setPendingAttachment] = useState(null);
+
+  const attachFile = useCallback((file) => {
     if (!file) return;
 
     const isImage = file.type && file.type.startsWith('image/');
@@ -377,16 +413,51 @@ export function AppProvider({ children }) {
 
     const sizeLabel = formatSize(file.size);
     const url = isImage ? URL.createObjectURL(file) : null;
-    generalChat.addMessage({ kind: 'file-msg', isImage, url, name: file.name, sizeLabel });
+    const typeLabel = isPdf ? 'PDF' : (file.type.split('/')[1] || 'FILE').toUpperCase();
+    setPendingAttachment((prev) => {
+      if (prev?.url) URL.revokeObjectURL(prev.url);
+      return { file, isImage, url, name: file.name, sizeLabel, typeLabel };
+    });
+  }, [pushToast]);
+
+  const clearAttachment = useCallback(() => {
+    setPendingAttachment((prev) => {
+      if (prev?.url) URL.revokeObjectURL(prev.url);
+      return null;
+    });
+  }, []);
+
+  // The actual send action for the chat page — plain text works exactly
+  // like generalChat.run() always did; a pending attachment gets described
+  // first (via the interpret endpoint) and merged with whatever the user
+  // typed alongside it, so "photo + a question about it" goes out as one turn.
+  const sendMessage = useCallback((overrideText) => {
+    const typedText = (overrideText !== undefined ? overrideText : generalChat.input).trim();
+
+    if (!pendingAttachment) {
+      if (!typedText) return;
+      generalChat.run(overrideText);
+      return;
+    }
+
+    const attachment = pendingAttachment;
+    generalChat.addMessage({ kind: 'file-msg', isImage: attachment.isImage, url: attachment.url, name: attachment.name, sizeLabel: attachment.sizeLabel });
+    generalChat.setInput('');
+    setPendingAttachment(null);
     generalChat.setStatus('● Justice AI is reading the attachment...');
     generalChat.addTyping();
 
-    interpretAttachment(file)
-      .then((description) => {
+    interpretAttachment(attachment.file)
+      .then((content) => {
         generalChat.removeTyping();
         generalChat.setStatus('● Online — usually replies instantly');
-        generalChat.setInput(description);
-        generalChat.run(description);
+        // The AI sees the caption plus the file's real content; the chat
+        // bubble only ever shows the caption (or nothing, if there wasn't
+        // one) — the attachment chip already represents the file itself.
+        const query = typedText
+          ? `${typedText}\n\nAttached file content:\n${content}`
+          : `Attached file content:\n${content}`;
+        generalChat.run(query, typedText);
       })
       .catch((err) => {
         generalChat.removeTyping();
@@ -394,7 +465,7 @@ export function AppProvider({ children }) {
         const errText = err instanceof ApiError ? err.message : 'Something went wrong. Please try again.';
         generalChat.addMessage({ kind: 'bot', responder: 'ai', name: 'Justice AI', avatar: '⚖️', text: errText });
       });
-  }, [generalChat, pushToast]);
+  }, [generalChat, pendingAttachment]);
 
   // ---------- institution contact page ----------
   // This is a "message this institution" channel, not the AI — sending a
@@ -446,7 +517,9 @@ export function AppProvider({ children }) {
     chat: {
       messages: generalChat.messages, chatStatus: generalChat.status,
       chatInput: generalChat.input, setChatInput: generalChat.setInput,
-      runChatDemo: generalChat.run, handleFileAttach, startChat, findService,
+      sendMessage, startChat, findService,
+      editMessage: generalChat.editMessage,
+      pendingAttachment, attachFile, clearAttachment,
     },
     activeInstitution, goToInstitutionContact,
     institutionChat: {

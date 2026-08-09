@@ -10,14 +10,17 @@ class AttachmentInterpreterAgent implements Agent
 {
     use Promptable;
 
+    // PDFs are handled separately (their text is extracted directly rather
+    // than routed through here) — this agent only ever sees images now,
+    // since there's no text to parse out of a photo without one.
     public function instructions(): string
     {
-        return "You are given an image or PDF attached by someone using a Justice Law and Order Sector (JLOS) "
-            . "assistant. Examine it and write a single, concise sentence describing what it is and what it's "
-            . "about, phrased as if the person were describing their situation or the document in their own "
-            . "words to ask for help (for example: \"I have a police arrest form for a theft case\" or \"This is "
-            . "a copy of the Human Rights Enforcement Act 2019\"). Do not add any commentary, greeting, or "
-            . "explanation — reply with only that one descriptive sentence.";
+        return 'You are given an image attached by someone using a Justice Law and Order Sector (JLOS) '
+            . 'assistant. Examine its actual visible content and describe it in 2-4 concise sentences: if it '
+            . "is a document, transcribe or summarize the specific text/details it contains; if it's a photo "
+            . 'of a situation, describe exactly what is shown. Do not phrase this as a first-person statement '
+            . 'from the user, and do not add commentary, greetings, or explanation — reply with only the '
+            . 'description.';
     }
 
     public function respond(array $attachments): AgentResponse

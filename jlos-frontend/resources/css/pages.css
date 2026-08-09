@@ -107,6 +107,20 @@
   .msg.bot{align-self:flex-start; background:var(--bg); border:1px solid var(--line); border-top-left-radius:5px; color:var(--text); white-space:pre-wrap;}
   .msg.user{align-self:flex-end; background:var(--navy); color:#fff; border-top-right-radius:5px; white-space:pre-wrap;}
   .msg.user .msg-time{display:block; text-align:right; margin-top:4px; font-size:var(--fs-2xs); color:rgba(255,255,255,.65);}
+  .msg-user-actions{display:flex; gap:2px; justify-content:flex-end; margin-bottom:4px;}
+  .msg-user-actions .speak-btn{color:rgba(255,255,255,.7);}
+  .msg-user-actions .speak-btn:hover{color:#fff;}
+  .msg.user.editing{
+    align-self:flex-end; background:var(--card); border:1px solid var(--line); color:var(--text);
+    max-width:80%; width:100%; padding:12px;
+  }
+  .msg-edit-textarea{
+    width:100%; border:1px solid var(--line); background:var(--bg); color:var(--text); border-radius:10px;
+    padding:10px 12px; font-size:var(--fs-base); font-family:inherit; line-height:1.5; resize:vertical; outline:none;
+  }
+  .msg-edit-textarea:focus{border-color:var(--accent);}
+  .msg-edit-actions{display:flex; gap:8px; justify-content:flex-end; margin-top:8px;}
+  .msg-edit-actions .mc-btn{flex:none; padding:8px 16px; font-size:var(--fs-xs);}
   .msg.system{
     align-self:center; background:#FBF3DC; border:1px solid #EBD79A; color:#7A5B12;
     font-size:var(--fs-xs); text-align:center; border-radius:10px; max-width:80%;
@@ -133,7 +147,33 @@
   .typing span:nth-child(2){animation-delay:.2s;} .typing span:nth-child(3){animation-delay:.4s;}
   @keyframes blink{0%,80%,100%{opacity:.25;} 40%{opacity:1;}}
 
-  .chat-panel-input{border-top:1px solid var(--line); padding:16px 30px; display:flex; gap:12px; align-items:flex-end; flex:0 0 auto; background:var(--card);}
+  /* One continuous rounded "compose card" — the attachment preview (when
+     present) sits as its own chip inside the top of this card, flush
+     against the input row below it, rather than floating separately above
+     it with its own margin/gap. */
+  .chat-compose{border-top:1px solid var(--line); padding:14px 20px 16px; flex:0 0 auto; background:var(--card);}
+  .attachment-preview{
+    display:inline-flex; align-items:center; gap:10px; padding:7px 14px 7px 7px; margin-bottom:12px; max-width:100%;
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+  }
+  .attachment-preview img{width:40px; height:40px; border-radius:10px; object-fit:cover; flex:0 0 auto;}
+  .attachment-preview .ap-ic{
+    width:40px; height:40px; border-radius:10px; flex:0 0 auto;
+    background:rgba(214,69,69,.12); color:#D64545; display:flex; align-items:center; justify-content:center;
+  }
+  .attachment-preview .ap-info{min-width:0;}
+  .attachment-preview .ap-name{
+    font-size:var(--fs-sm); font-weight:700; color:var(--ink); white-space:nowrap; overflow:hidden;
+    text-overflow:ellipsis; max-width:240px;
+  }
+  .attachment-preview .ap-type{font-size:var(--fs-xs); color:var(--muted); margin-top:1px;}
+  .attachment-preview .ap-remove{
+    width:22px; height:22px; border-radius:50%; border:none; background:var(--bg); color:var(--muted);
+    cursor:pointer; flex:0 0 auto; display:flex; align-items:center; justify-content:center; margin-left:2px;
+    transition:background .15s ease, color .15s ease;
+  }
+  .attachment-preview .ap-remove:hover{background:var(--line); color:var(--ink);}
+  .chat-panel-input{padding:0; display:flex; gap:12px; align-items:flex-end;}
   .chat-panel-input textarea{
     flex:1; border:1px solid var(--line); background:var(--bg); color:var(--text); border-radius:20px;
     padding:14px 20px; font-size:var(--fs-base); outline:none; font-family:inherit; line-height:1.5;
@@ -173,6 +213,26 @@
   .file-doc .fd-name{font-size:var(--fs-xs); font-weight:700; color:var(--ink); word-break:break-word;}
   .file-meta{font-size:var(--fs-2xs); color:var(--muted);}
 
+  /* ============ ASK JUSTICE AI — "free", uncontained layout ============
+     Scoped to #page-chat: the institution contact page reuses these same
+     .chat-panel/.chat-panel-head/.chat-panel-body/.msg classes and keeps
+     the bordered-card look there, so these overrides must not leak into
+     it. Messages flow directly on the page background instead of sitting
+     inside a bordered white card — the compose bar is the only piece that
+     keeps a contained, floating shape, the same way ChatGPT's does. */
+  #page-chat .chat-panel{background:transparent; border:none; box-shadow:none; border-radius:0; overflow:visible;}
+  #page-chat .chat-panel-head{background:transparent; padding:4px 4px 18px;}
+  #page-chat .chat-panel-head .cph-icon{background:var(--grad-navy); box-shadow:var(--shadow-sm);}
+  #page-chat .chat-panel-head h3{color:var(--ink);}
+  #page-chat .chat-panel-head p{color:var(--muted);}
+  #page-chat .chat-panel-body{padding:8px 6px 24px;}
+  #page-chat .msg.bot{background:var(--card); box-shadow:var(--shadow-sm);}
+  #page-chat .chat-compose{
+    background:var(--card); border:1px solid var(--line); border-radius:26px;
+    box-shadow:var(--shadow-md); padding:14px 18px 16px; margin-top:14px;
+  }
+  #page-chat .chat-panel-input textarea{background:transparent; border:none; padding:14px 6px;}
+
   @media (max-width:640px){
     /* Phones: the 32px side padding plus 30-40px of internal card padding
        left very little room for actual conversation — tighten both so the
@@ -187,13 +247,26 @@
     .chat-panel-head p{font-size:var(--fs-2xs);}
     .chat-panel-body{padding:16px 14px; gap:10px;}
     .msg{max-width:85%; font-size:var(--fs-sm); padding:10px 14px;}
-    .chat-panel-input{padding:10px 12px; gap:8px;}
+    .chat-compose{padding:10px 12px 12px;}
+    .chat-panel-input{gap:8px;}
     /* The placeholder ("Type your problem here...") often wraps onto a 2nd
        line at this width — min-height needs to comfortably fit 2 lines or
        the 2nd one gets clipped against the box's bottom edge instead of
        both lines sitting centered (the align-items:center added above only
        centers whatever fits; it can't un-clip an undersized box). */
     .chat-panel-input textarea{padding:11px 14px; min-height:60px; font-size:var(--fs-sm);}
+
+    /* #page-chat's rules above use an ID, so they outrank the plain-class
+       rules just above regardless of media query — these restate the same
+       mobile tightening for the "free" layout so it doesn't stay locked to
+       desktop spacing on small screens. */
+    #page-chat .chat-panel-head{padding:2px 2px 12px; gap:10px;}
+    #page-chat .chat-panel-head .cph-icon{width:34px; height:34px;}
+    #page-chat .chat-panel-head h3{font-size:var(--fs-sm);}
+    #page-chat .chat-panel-head p{font-size:var(--fs-2xs);}
+    #page-chat .chat-panel-body{padding:6px 2px 16px; gap:10px;}
+    #page-chat .chat-compose{padding:10px 14px 12px; border-radius:22px; margin-top:10px;}
+    #page-chat .chat-panel-input textarea{padding:11px 8px; min-height:60px; font-size:var(--fs-sm);}
   }
 
   /* ============ INSTITUTIONS PAGE ============ */
