@@ -33,12 +33,19 @@
     display:flex; gap:8px;
   }
   @media (min-width:921px){ .hero-slide-dots{left:auto; right:32px; transform:none;} }
+  /* The visible dot stays 8px (::before) but the actual clickable button is
+     a 24px box around it — an 8px raw tap target is unusably small on a
+     real touchscreen even though it reads fine as a small visual indicator. */
   .hero-slide-dot{
-    width:8px; height:8px; padding:0; border-radius:50%; border:1.5px solid rgba(255,255,255,.65);
-    background:rgba(255,255,255,.25); cursor:pointer; transition:background .2s ease, transform .2s ease;
+    width:24px; height:24px; padding:0; background:none; border:none;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
   }
-  .hero-slide-dot:hover{transform:scale(1.15);}
-  .hero-slide-dot.active{background:var(--gold-2); border-color:var(--gold-2);}
+  .hero-slide-dot::before{
+    content:""; width:8px; height:8px; border-radius:50%; border:1.5px solid rgba(255,255,255,.65);
+    background:rgba(255,255,255,.25); transition:background .2s ease, transform .2s ease;
+  }
+  .hero-slide-dot:hover::before{transform:scale(1.15);}
+  .hero-slide-dot.active::before{background:var(--gold-2); border-color:var(--gold-2);}
   @media (prefers-reduced-motion: reduce){
     .hero-slide{transition:none;}
   }
@@ -147,8 +154,11 @@
   .hero-search-card input[type="text"]:focus{border-color:var(--gold);}
   .hero-search-card input[type="text"]::placeholder{color:var(--muted);}
 
+  /* 36px, not 30px — still clears the input's existing 48px right-padding
+     reservation with room to spare, but sits closer to a comfortable tap
+     target than the original size did. */
   .hero-mic-btn{
-    position:absolute; right:8px; top:50%; transform:translateY(-50%); width:30px; height:30px; border-radius:50%;
+    position:absolute; right:8px; top:50%; transform:translateY(-50%); width:36px; height:36px; border-radius:50%;
     display:flex; align-items:center; justify-content:center; cursor:pointer;
     background:var(--card); border:1px solid var(--line); color:var(--ink-soft);
     transition:transform .12s ease, background .15s ease, color .15s ease;
