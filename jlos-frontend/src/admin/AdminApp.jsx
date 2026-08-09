@@ -19,6 +19,36 @@ function slugify(text) {
   return text.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 }
 
+// ---------- confirm dialog ----------
+// A styled in-app replacement for window.confirm() — that's the browser's
+// own native dialog (the one prefixed with "localhost:5175 says") rather
+// than anything the app renders, so it can't be restyled, only replaced.
+// Mirrors window.confirm's call shape: `if (!(await confirm(message))) return;`
+function useConfirm() {
+  const [state, setState] = useState(null); // { message, resolve } | null
+
+  const confirm = useCallback((message) => new Promise((resolve) => {
+    setState({ message, resolve });
+  }), []);
+
+  const handleConfirm = () => { state.resolve(true); setState(null); };
+  const handleCancel = () => { state.resolve(false); setState(null); };
+
+  const dialog = state && (
+    <div className="admin-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) handleCancel(); }}>
+      <div className="admin-modal admin-confirm-modal">
+        <p>{state.message}</p>
+        <div className="admin-modal-actions">
+          <button type="button" className="cancel" onClick={handleCancel}>Cancel</button>
+          <button type="button" className="danger-confirm" onClick={handleConfirm}>Confirm</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return [confirm, dialog];
+}
+
 // ---------- login ----------
 function AdminLogin({ onSignedIn }) {
   const [email, setEmail] = useState('');
@@ -210,6 +240,7 @@ function PagesPanel({ institution, onClose }) {
   const [error, setError] = useState(null);
   const [editingId, setEditingId] = useState(null); // page id being edited, or 'new'
   const [draft, setDraft] = useState({ content_type: '', path: '', active: true });
+  const [confirm, confirmDialog] = useConfirm();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -250,7 +281,7 @@ function PagesPanel({ institution, onClose }) {
   };
 
   const remove = async (page) => {
-    if (!window.confirm(`Remove the "${page.content_type}" page? This also deletes its already-scraped content and embeddings — re-adding it later will need a fresh scrape.`)) return;
+    if (!(await confirm(`Remove the "${page.content_type}" page? This also deletes its already-scraped content and embeddings — re-adding it later will need a fresh scrape.`))) return;
     try {
       await deleteAdminInstitutionPage(institution.id, page.id);
       load();
@@ -268,6 +299,7 @@ function PagesPanel({ institution, onClose }) {
         </p>
         {error && <div className="admin-error">{error}</div>}
         {loading ? <p>Loading…</p> : (
+          <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr><th>Content type</th><th>Path</th><th>Active</th><th></th></tr>
@@ -289,7 +321,7 @@ function PagesPanel({ institution, onClose }) {
                 ) : (
                   <tr key={page.id}>
                     <td>{page.content_type}</td>
-                    <td style={{ wordBreak: 'break-all' }}>{page.path}</td>
+                    <td className="wrap" style={{ wordBreak: 'break-all' }}>{page.path}</td>
                     <td>{page.active ? 'Yes' : 'No'}</td>
                     <td>
                       <div className="admin-row-actions">
@@ -315,6 +347,7 @@ function PagesPanel({ institution, onClose }) {
               )}
             </tbody>
           </table>
+          </div>
         )}
         {editingId === null && (
           <button type="button" className="admin-btn" style={{ width: 'auto', padding: '8px 16px', marginTop: 14 }} onClick={startNew}>
@@ -325,6 +358,7 @@ function PagesPanel({ institution, onClose }) {
           <button type="button" className="cancel" onClick={onClose}>Close</button>
         </div>
       </div>
+      {confirmDialog}
     </div>
   );
 }
@@ -447,6 +481,7 @@ function AdminDashboard({ user, onSignOut }) {
   const [managingPagesFor, setManagingPagesFor] = useState(null); // institution object
   const [scrapingFor, setScrapingFor] = useState(null); // institution object
   const [error, setError] = useState(null);
+  const [confirm, confirmDialog] = useConfirm();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -459,7 +494,7 @@ function AdminDashboard({ user, onSignOut }) {
   useEffect(() => { load(); }, [load]);
 
   const remove = async (inst) => {
-    if (!window.confirm(`Delete "${inst.name}"? This cannot be undone.`)) return;
+    if (!(await confirm(`Delete "${inst.name}"? This cannot be undone.`))) return;
     try {
       await deleteAdminInstitution(inst.id);
       load();
@@ -485,6 +520,7 @@ function AdminDashboard({ user, onSignOut }) {
         {loading ? (
           <p>Loading…</p>
         ) : (
+          <div className="admin-table-wrap">
           <table className="admin-table">
             <thead>
               <tr><th>Name</th><th>Slug</th><th>Status</th><th></th></tr>
@@ -507,6 +543,7 @@ function AdminDashboard({ user, onSignOut }) {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
@@ -532,6 +569,8 @@ function AdminDashboard({ user, onSignOut }) {
           onPublished={() => { setScrapingFor(null); load(); }}
         />
       )}
+
+      {confirmDialog}
     </div>
   );
 }

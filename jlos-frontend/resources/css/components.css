@@ -114,7 +114,10 @@
   .modal-dialog.wide{max-width:640px;}
   @keyframes dialogIn{from{opacity:0; transform:scale(.94) translateY(10px); filter:blur(6px);} to{opacity:1; transform:scale(1) translateY(0); filter:blur(0);}}
   .modal-dialog h3{font-family:'Poppins'; font-size:var(--fs-md); color:var(--ink); display:flex; justify-content:space-between; align-items:center;}
-  .modal-close{width:30px; height:30px; border-radius:50%; background:var(--bg); display:flex; align-items:center; justify-content:center; cursor:pointer; flex:0 0 auto;}
+  /* 38px, not the visually-implied 30px — matches the nav icon buttons'
+     touch target size instead of sitting well under the ~40px comfortable-
+     tap-target guideline. */
+  .modal-close{width:38px; height:38px; border-radius:50%; background:var(--bg); display:flex; align-items:center; justify-content:center; cursor:pointer; flex:0 0 auto;}
   .lang-opt{display:flex; align-items:center; justify-content:space-between; padding:13px 4px; border-bottom:1px solid var(--line); font-size:var(--fs-sm); cursor:pointer;}
   .lang-opt.selected{color:var(--ink); font-weight:700;}
   .radio-dot{width:17px; height:17px; border-radius:50%; border:2px solid var(--line);}
