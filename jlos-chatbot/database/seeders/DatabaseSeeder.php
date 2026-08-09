@@ -23,5 +23,6 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call(InstitutionSeeder::class);
+        $this->call(InstitutionPageSeeder::class);
     }
 }

@@ -43,6 +43,26 @@ function formatSize(bytes) {
   return (kb / 1024).toFixed(1) + ' MB';
 }
 
+// The database uses clearer column names than the UI's original prop names
+// (short_name/sub_heading/logo_url vs. short/sub/logo) — translated here,
+// once, so every component that renders an institution keeps working with
+// the same shape it always has.
+function mapInstitution(row) {
+  return {
+    code: row.code,
+    short: row.short_name,
+    name: row.name,
+    sub: row.sub_heading,
+    color: row.color,
+    icon: row.icon,
+    phone: row.phone,
+    website: row.website,
+    logo: row.logo_url,
+    services: row.services || [],
+    chatSlug: row.slug,
+  };
+}
+
 // Turns persisted {role, content, created_at} rows back into the shape the
 // chat UI already renders, so restored history looks identical to a live
 // reply — including its real original timestamp, not the moment it was
@@ -313,11 +333,19 @@ export function AppProvider({ children }) {
     guestToken,
   });
 
-  // On load, just confirm the backend is reachable.
+  // ---------- institutions ----------
+  // Fetched once on load from the database (previously a hardcoded file) —
+  // only published institutions come back, so a draft one mid-setup in the
+  // admin area never appears here.
+  const [institutions, setInstitutions] = useState([]);
+
   useEffect(() => {
     let cancelled = false;
     fetchInstitutions()
-      .then(() => { /* reachable — session already starts in the idle status */ })
+      .then((rows) => {
+        if (cancelled) return;
+        setInstitutions(rows.map(mapInstitution));
+      })
       .catch(() => {
         if (cancelled) return;
         pushToast('Assistant unreachable — is the API server running?');
@@ -514,6 +542,7 @@ export function AppProvider({ children }) {
     openModal, closeModal, closeAllModals, isModalOpen,
     toasts, pushToast, dismissToast,
     language, setLanguage, t,
+    institutions,
     chat: {
       messages: generalChat.messages, chatStatus: generalChat.status,
       chatInput: generalChat.input, setChatInput: generalChat.setInput,
