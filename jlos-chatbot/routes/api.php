@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AdminInstitutionController;
 use App\Http\Controllers\Admin\AdminInstitutionPageController;
+use App\Http\Controllers\Admin\AdminLogoController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\ChatController;
@@ -37,6 +38,9 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/institutions/{institution}/pages', [AdminInstitutionPageController::class, 'store']);
     Route::put('/institutions/{institution}/pages/{page}', [AdminInstitutionPageController::class, 'update']);
     Route::delete('/institutions/{institution}/pages/{page}', [AdminInstitutionPageController::class, 'destroy']);
+
+    Route::post('/logo-candidates', [AdminLogoController::class, 'candidates']);
+    Route::post('/logo-fetch', [AdminLogoController::class, 'fetchLogo']);
 });
 
 Route::get('/conversations/current', [ConversationController::class, 'current']);

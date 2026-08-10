@@ -47,6 +47,22 @@ return [
             'report' => false,
         ],
 
+        // Writes straight into the web root instead of storage/app/public +
+        // the public/storage symlink — deliberately avoiding that symlink,
+        // since it silently failed to survive deployment on a past project
+        // (some deploy processes — rsync, zip-based deploys, restricted
+        // permissions — don't preserve symlinks) and files "existed" on disk
+        // but 404'd over HTTP. A plain directory under public/ has no such
+        // failure mode: whatever's written there is reachable immediately.
+        'uploads' => [
+            'driver' => 'local',
+            'root' => public_path('uploads'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/uploads',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
