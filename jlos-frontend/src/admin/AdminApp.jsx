@@ -4,7 +4,7 @@ import { login, logout, fetchMe } from '../lib/auth.js';
 import {
   fetchAdminInstitutions, createAdminInstitution, updateAdminInstitution, deleteAdminInstitution,
   fetchAdminInstitutionPages, createAdminInstitutionPage, updateAdminInstitutionPage, deleteAdminInstitutionPage,
-  triggerAdminScrape, fetchLatestScrapeRun,
+  triggerAdminScrape, fetchLatestScrapeRun, fetchLogoCandidates, fetchAndSaveLogo,
   ApiError,
 } from '../lib/api.js';
 
@@ -102,6 +102,10 @@ function InstitutionForm({ institution, onClose, onSaved }) {
   const [serviceDraft, setServiceDraft] = useState('');
   const [error, setError] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [logoCandidates, setLogoCandidates] = useState(null); // null = not checked yet, [] = checked, nothing found
+  const [logoLoading, setLogoLoading] = useState(false);
+  const [logoError, setLogoError] = useState(null);
+  const [logoSaving, setLogoSaving] = useState(null); // the candidate url currently being downloaded, if any
 
   const set = (key) => (e) => {
     const value = e.target.value;
@@ -124,6 +128,48 @@ function InstitutionForm({ institution, onClose, onSaved }) {
 
   const removeService = (i) => {
     setForm((f) => ({ ...f, services: f.services.filter((_, idx) => idx !== i) }));
+  };
+
+  // Scrapes the institution's own site (never a search engine or third
+  // party) for likely logo images, so whatever shows up is genuinely
+  // theirs — the admin still has to click the correct one below, since even
+  // on the real site there can be banners/photos alongside the actual logo.
+  const findLogos = async () => {
+    if (!form.base_url) return;
+    setLogoError(null);
+    setLogoLoading(true);
+    setLogoCandidates(null);
+    try {
+      const { candidates, message } = await fetchLogoCandidates(form.base_url);
+      setLogoCandidates(candidates);
+      if (candidates.length === 0) setLogoError(message || "Couldn't find a logo on that site — paste one manually instead.");
+    } catch (err) {
+      setLogoCandidates([]);
+      setLogoError(err instanceof ApiError ? err.message : 'Could not check that site.');
+    } finally {
+      setLogoLoading(false);
+    }
+  };
+
+  // Only once the admin has confirmed which candidate is actually the logo
+  // does anything get downloaded — this self-hosts it under this
+  // institution's slug so it doesn't depend on their site staying fast/up.
+  const pickLogo = async (candidateUrl) => {
+    if (!form.slug) {
+      setLogoError('Give the institution a slug first.');
+      return;
+    }
+    setLogoError(null);
+    setLogoSaving(candidateUrl);
+    try {
+      const { logo_url } = await fetchAndSaveLogo(form.slug, candidateUrl);
+      setForm((f) => ({ ...f, logo_url }));
+      setLogoCandidates(null);
+    } catch (err) {
+      setLogoError(err instanceof ApiError ? err.message : 'Could not save that logo.');
+    } finally {
+      setLogoSaving(null);
+    }
   };
 
   const submit = async (e) => {
@@ -201,7 +247,52 @@ function InstitutionForm({ institution, onClose, onSaved }) {
           </div>
           <div className="admin-field full">
             <label>Logo URL</label>
-            <input value={form.logo_url} onChange={set('logo_url')} placeholder="/resources/images/institutions/slug.png" />
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              {form.logo_url && (
+                <img
+                  src={form.logo_url}
+                  alt=""
+                  style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'contain', background: '#F4F5F7', border: '1px solid #E4E6EA', flex: '0 0 auto' }}
+                />
+              )}
+              <input value={form.logo_url} onChange={set('logo_url')} placeholder="/resources/images/institutions/slug.png" style={{ flex: 1 }} />
+              <button
+                type="button"
+                className="admin-btn"
+                style={{ width: 'auto', padding: '0 16px', flex: '0 0 auto' }}
+                onClick={findLogos}
+                disabled={!form.base_url || logoLoading}
+              >
+                {logoLoading ? 'Checking…' : 'Fetch from website'}
+              </button>
+            </div>
+            {logoError && <div className="admin-error" style={{ marginTop: 8 }}>{logoError}</div>}
+            {logoCandidates && logoCandidates.length > 0 && (
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
+                {logoCandidates.map((c) => (
+                  <button
+                    type="button"
+                    key={c.url}
+                    onClick={() => pickLogo(c.url)}
+                    disabled={logoSaving !== null}
+                    title={c.label}
+                    style={{
+                      width: 64, padding: '6px 6px 4px', border: '1px solid #E4E6EA', borderRadius: 10,
+                      background: '#fff', cursor: logoSaving ? 'wait' : 'pointer',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                    }}
+                  >
+                    <img
+                      src={c.url}
+                      alt={c.label}
+                      style={{ width: 44, height: 44, objectFit: 'contain' }}
+                      onError={(e) => { e.currentTarget.style.visibility = 'hidden'; }}
+                    />
+                    <span style={{ fontSize: 10, color: '#6B7480' }}>{logoSaving === c.url ? 'Saving…' : c.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="admin-field full">
             <label>Services</label>

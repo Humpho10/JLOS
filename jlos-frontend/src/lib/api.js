@@ -216,3 +216,17 @@ export function triggerAdminScrape(institutionId) {
 export function fetchLatestScrapeRun(institutionId) {
   return adminRequest(`/institutions/${institutionId}/scrape-runs/latest`);
 }
+
+// Scrapes an institution's own site for likely logo images (favicon,
+// og:image, anything tagged "logo") — never a search engine or third party,
+// so whatever comes back is genuinely theirs. Returns candidates for the
+// admin to look at, not a final answer.
+export function fetchLogoCandidates(baseUrl) {
+  return adminRequest('/logo-candidates', { method: 'POST', body: JSON.stringify({ base_url: baseUrl }) });
+}
+
+// Downloads and self-hosts whichever candidate the admin actually clicked,
+// so the institution's logo doesn't depend on their site staying up/fast.
+export function fetchAndSaveLogo(slug, imageUrl) {
+  return adminRequest('/logo-fetch', { method: 'POST', body: JSON.stringify({ slug, image_url: imageUrl }) });
+}
