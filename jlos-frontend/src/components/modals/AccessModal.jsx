@@ -25,15 +25,21 @@ function ToggleRow({ id, title, desc, initialOn = false, noBorder = false, on: c
 }
 
 export default function AccessModal() {
-  const { isDark, toggleTheme } = useApp();
+  const {
+    isDark, toggleTheme,
+    largeText, toggleLargeText,
+    highContrast, toggleHighContrast,
+    voiceEnabled, toggleVoiceEnabled,
+    readAloud, toggleReadAloud,
+  } = useApp();
 
   return (
     <ModalShell id="accessModal" title="Display & Accessibility">
       <ToggleRow id="themeSwitch" title="Dark theme" desc="Switch to a darker, low-glare palette" on={isDark} onClick={toggleTheme} />
-      <ToggleRow title="Audio read-aloud" desc="Screen content is read out for blind & low-vision users" initialOn />
-      <ToggleRow title="Large text" desc="Increase font size across the app" />
-      <ToggleRow title="High contrast mode" desc="Stronger colour contrast for low vision" />
-      <ToggleRow title="Voice input for chat" desc="Speak instead of typing to Justice AI" initialOn noBorder />
+      <ToggleRow title="Audio read-aloud" desc="Justice AI replies are read out for blind & low-vision users" on={readAloud} onClick={toggleReadAloud} />
+      <ToggleRow title="Large text" desc="Increase font size across the app" on={largeText} onClick={toggleLargeText} />
+      <ToggleRow title="High contrast mode" desc="Stronger colour contrast for low vision" on={highContrast} onClick={toggleHighContrast} />
+      <ToggleRow title="Voice input for chat" desc="Speak instead of typing to Justice AI" on={voiceEnabled} onClick={toggleVoiceEnabled} noBorder />
     </ModalShell>
   );
 }

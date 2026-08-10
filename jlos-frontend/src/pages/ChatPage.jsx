@@ -167,7 +167,7 @@ function ChatMessage({
 }
 
 export default function ChatPage({ active }) {
-  const { chat, pushToast, t } = useApp();
+  const { chat, pushToast, t, voiceEnabled, readAloud } = useApp();
   const bodyRef = useRef(null);
   const fileInputRef = useRef(null);
   const inputRef = useRef(null);
@@ -175,6 +175,8 @@ export default function ChatPage({ active }) {
   const [copiedId, setCopiedId] = useState(null);
   const [editingId, setEditingId] = useState(null);
   const [editDraft, setEditDraft] = useState('');
+  // Tracks the last reply auto-read aloud, so each is spoken exactly once.
+  const lastAutoSpokenRef = useRef(undefined);
 
   // Also re-run when `active` flips true: other pages stay mounted (just
   // CSS-hidden) while inactive, so a message arriving while this page is
@@ -224,6 +226,30 @@ export default function ChatPage({ active }) {
     }
   }, []);
 
+  // Auto-read the newest reply aloud when the "Audio read-aloud" accessibility
+  // setting is on, reusing the same SpeechSynthesis path as the manual speak
+  // button. The ref guarantees a reply is read exactly once (not on every
+  // re-render), only fires once streaming has finished (status no longer
+  // "typing"/"reading"), and adopts the existing tail silently on first run so
+  // page load or a restored conversation is never read back unprompted.
+  useEffect(() => {
+    const last = chat.messages[chat.messages.length - 1];
+
+    if (lastAutoSpokenRef.current === undefined) {
+      lastAutoSpokenRef.current = last ? last.id : null;
+      return;
+    }
+
+    const status = chat.chatStatus.toLowerCase();
+    const lastBotDone = last && last.kind === 'bot' && last.text
+      && !status.includes('typing') && !status.includes('reading');
+
+    if (!readAloud || !lastBotDone || lastAutoSpokenRef.current === last.id) return;
+
+    lastAutoSpokenRef.current = last.id;
+    if (speakingId !== last.id) toggleSpeak(last.id, stripMarkdown(last.text));
+  }, [chat.messages, chat.chatStatus, readAloud, speakingId, toggleSpeak]);
+
   const copyReply = useCallback((id, text) => {
     if (typeof navigator === 'undefined' || !navigator.clipboard) return;
     navigator.clipboard.writeText(text)
@@ -257,6 +283,13 @@ export default function ChatPage({ active }) {
     onNoSupport: () => pushToast('Voice input needs a browser like Chrome or Edge.'),
     onError: () => pushToast("Didn't catch that — try again."),
   });
+
+  // If voice input is switched off in Accessibility while the mic is live, the
+  // button unmounts — so stop the in-flight recognition here rather than leave
+  // it running with no way to end it.
+  useEffect(() => {
+    if (!voiceEnabled && listening) toggleVoiceInput();
+  }, [voiceEnabled, listening, toggleVoiceInput]);
 
   return (
     <section className={`page ${active ? 'active' : ''}`} id="page-chat">
@@ -342,18 +375,20 @@ export default function ChatPage({ active }) {
                   }
                 }}
               />
-              <button
-                type="button"
-                className={`mic-btn ${listening ? 'listening' : ''}`}
-                title="Speak your message"
-                aria-label="Speak your message"
-                aria-pressed={listening}
-                onClick={toggleVoiceInput}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                  <rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8" />
-                </svg>
-              </button>
+              {voiceEnabled && (
+                <button
+                  type="button"
+                  className={`mic-btn ${listening ? 'listening' : ''}`}
+                  title="Speak your message"
+                  aria-label="Speak your message"
+                  aria-pressed={listening}
+                  onClick={toggleVoiceInput}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+                    <rect x="9" y="2" width="6" height="12" rx="3" /><path d="M5 10a7 7 0 0 0 14 0M12 17v4M8 21h8" />
+                  </svg>
+                </button>
+              )}
               <button type="button" className="send-btn" aria-label="Send message" onClick={() => chat.sendMessage()}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M2 21l21-9L2 3v7l15 2-15 2z" /></svg>
               </button>

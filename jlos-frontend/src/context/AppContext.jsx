@@ -29,6 +29,25 @@ export function useApp() {
 let uid = 0;
 const nextId = () => `m${++uid}`;
 
+// A boolean setting that persists to localStorage and survives reloads —
+// the same shape the theme toggle uses, factored out so every accessibility
+// preference (large text, high contrast, voice input, read-aloud) behaves
+// identically. Returns [value, toggle] just like useState's tuple.
+function usePersistedFlag(storageKey, defaultOn = false) {
+  const [on, setOn] = useState(() => {
+    const stored = localStorage.getItem(storageKey);
+    return stored === null ? defaultOn : stored === 'on';
+  });
+  const toggle = useCallback(() => {
+    setOn((v) => {
+      const next = !v;
+      localStorage.setItem(storageKey, next ? 'on' : 'off');
+      return next;
+    });
+  }, [storageKey]);
+  return [on, toggle];
+}
+
 function initialMessages() {
   return [
     { id: nextId(), kind: 'system', text: 'Chat started · English · Connected to Justice AI' },
@@ -260,6 +279,17 @@ export function AppProvider({ children }) {
       return next;
     });
   }, []);
+
+  // ---------- accessibility settings ----------
+  // Each mirrors the theme toggle: a persisted flag applied either as a
+  // <body> class (largeText, highContrast — see App.jsx) or read directly by
+  // the feature it gates (voiceEnabled → the chat mic, readAloud → auto-speak
+  // of replies in ChatPage). Read-aloud defaults off so the app never starts
+  // speaking unprompted; the rest match their original switch defaults.
+  const [largeText, toggleLargeText] = usePersistedFlag('jlos_large_text', false);
+  const [highContrast, toggleHighContrast] = usePersistedFlag('jlos_high_contrast', false);
+  const [voiceEnabled, toggleVoiceEnabled] = usePersistedFlag('jlos_voice_input', true);
+  const [readAloud, toggleReadAloud] = usePersistedFlag('jlos_read_aloud', false);
 
   // ---------- modals ----------
   const [openModalIds, setOpenModalIds] = useState(() => new Set());
@@ -539,6 +569,10 @@ export function AppProvider({ children }) {
   const value = {
     activePage, goToPage,
     isDark, toggleTheme,
+    largeText, toggleLargeText,
+    highContrast, toggleHighContrast,
+    voiceEnabled, toggleVoiceEnabled,
+    readAloud, toggleReadAloud,
     openModal, closeModal, closeAllModals, isModalOpen,
     toasts, pushToast, dismissToast,
     language, setLanguage, t,

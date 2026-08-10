@@ -80,6 +80,48 @@
   body.theme-dark .modal-overlay-web{background:rgba(0,0,0,.65);}
   body.theme-dark .navbar{box-shadow:0 4px 20px rgba(0,0,0,.4);}
 
+  /* ---- Large text (accessibility toggle) ----
+     Every font-size in the app references one of the --fs-* tokens, so
+     scaling the whole UI up is a single override here (~18% larger). */
+  body.theme-large-text{
+    --fs-2xs: 13px;
+    --fs-xs: 14.5px;
+    --fs-sm: 16.5px;
+    --fs-base: 17.5px;
+    --fs-md: 19px;
+    --fs-lg: 21px;
+    --fs-xl: 25px;
+    --fs-2xl: 31px;
+  }
+
+  /* ---- High contrast (accessibility toggle) ----
+     Pushes text/line colours to their extremes and darkens the accent for
+     low-vision users. Layered for both light (default) and dark themes so it
+     composes with either. Combines freely with large text. */
+  body.theme-contrast{
+    --bg:#FFFFFF;
+    --card:#FFFFFF;
+    --ink:#000000;
+    --ink-soft:#1A1A1A;
+    --text:#000000;
+    --muted:#2E353D;
+    --line:#7A8087;
+    --accent:#5E1668;
+    --accent-2:#782484;
+  }
+  body.theme-contrast.theme-dark,
+  body.theme-dark.theme-contrast{
+    --bg:#000000;
+    --card:#0C141C;
+    --ink:#FFFFFF;
+    --ink-soft:#F5E9C6;
+    --text:#FFFFFF;
+    --muted:#DCE4EC;
+    --line:#61707C;
+    --accent:#E9A6F3;
+    --accent-2:#F0BEF7;
+  }
+
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   html,body{margin:0;padding:0;}

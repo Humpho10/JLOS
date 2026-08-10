@@ -133,8 +133,25 @@ class InstitutionScraperService
         return [$title, trim(preg_replace('/\s+/', ' ', $rawText))];
     }
 
+    // PDFs larger than this are skipped rather than parsed: smalot/pdfparser
+    // holds the whole document in memory and can use many times the file size,
+    // so a large report (e.g. an annual report) can exhaust PHP's memory limit
+    // and take down the entire scrape run with an uncatchable fatal error.
+    protected const MAX_PDF_BYTES = 20 * 1024 * 1024; // 20 MB
+
     protected function extractPdf(string $body, string $fallbackTitle, callable $log): array
     {
+        if (strlen($body) > static::MAX_PDF_BYTES) {
+            $mb = round(strlen($body) / 1024 / 1024, 1);
+            $log("  Skipping oversized PDF ({$mb} MB > 20 MB limit).");
+
+            return [$fallbackTitle, ''];
+        }
+
+        // Parsing is memory-hungry; give it headroom and restore afterwards.
+        $previousLimit = ini_get('memory_limit');
+        ini_set('memory_limit', '512M');
+
         try {
             $pdf = (new PdfParser())->parseContent($body);
             $details = $pdf->getDetails();
@@ -144,6 +161,8 @@ class InstitutionScraperService
             $log("  Could not parse PDF ({$e->getMessage()}).");
 
             return [$fallbackTitle, ''];
+        } finally {
+            ini_set('memory_limit', $previousLimit);
         }
 
         return [$title, trim(preg_replace('/\s+/', ' ', $rawText))];
