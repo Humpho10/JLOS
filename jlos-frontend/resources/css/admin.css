@@ -125,8 +125,24 @@
 .admin-table tr:last-child td { border-bottom: none; }
 /* The path column is the one cell that's genuinely long (some scrape
    targets are full download URLs) — let it wrap instead of forcing the
-   whole table wider just to fit one column's worst case on one line. */
-.admin-table td.wrap { white-space: normal; }
+   whole table wider just to fit one column's worst case on one line.
+   overflow-wrap:anywhere only breaks a word when it truly doesn't fit
+   (word-break:break-all used to break every few characters regardless,
+   turning a single path into a tall stack of near-illegible fragments). */
+.admin-table td.wrap { white-space: normal; overflow-wrap: anywhere; }
+
+/* Content-type/Active/Actions stay single-line; only Path is allowed to
+   wrap — combined with the explicit column widths on this table (see
+   PagesPanel), Path reliably gets the lion's share of the row instead of
+   being squeezed by three nowrap columns claiming space first. */
+/* table-layout:fixed makes the explicit <th> widths (set inline in
+   PagesPanel) authoritative instead of just a hint the auto-layout
+   algorithm is free to override based on content — without this, the
+   browser was still handing Content-type ~430px and Path ~60px regardless
+   of what widths were specified. */
+.pages-table { table-layout: fixed; }
+.pages-table th, .pages-table td { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pages-table td.wrap { white-space: normal; overflow: visible; text-overflow: clip; }
 
 @media (max-width: 640px) {
   .admin-main { padding: 18px 14px; }

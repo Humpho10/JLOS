@@ -391,9 +391,9 @@ function PagesPanel({ institution, onClose }) {
         {error && <div className="admin-error">{error}</div>}
         {loading ? <p>Loading…</p> : (
           <div className="admin-table-wrap">
-          <table className="admin-table">
+          <table className="admin-table pages-table">
             <thead>
-              <tr><th>Content type</th><th>Path</th><th>Active</th><th></th></tr>
+              <tr><th style={{ width: '22%' }}>Content type</th><th style={{ width: '44%' }}>Path</th><th style={{ width: '10%' }}>Active</th><th style={{ width: '24%' }}></th></tr>
             </thead>
             <tbody>
               {pages.map((page) => (
@@ -412,7 +412,7 @@ function PagesPanel({ institution, onClose }) {
                 ) : (
                   <tr key={page.id}>
                     <td>{page.content_type}</td>
-                    <td className="wrap" style={{ wordBreak: 'break-all' }}>{page.path}</td>
+                    <td className="wrap">{page.path}</td>
                     <td>{page.active ? 'Yes' : 'No'}</td>
                     <td>
                       <div className="admin-row-actions">
