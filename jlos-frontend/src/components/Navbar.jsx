@@ -22,7 +22,7 @@ export default function Navbar() {
           <button type="button" className="brand-cluster-web" onClick={() => goToPage('page-home')} aria-label="JLOS Justice Portal — go to homepage">
             <div className="brand-chip-web">
               <img
-                src="/resources/images/JLOS-logo.png"
+                src="/resources/images/jlos-logo.png"
                 alt="JLOS — Justice, Law and Order Sector"
                 onError={(e) => {
                   e.currentTarget.onerror = null;

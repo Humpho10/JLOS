@@ -14,7 +14,7 @@ export default function Footer() {
           <div className="footer-col footer-brand">
             <div className="footer-brand-row">
               <img
-                src="/resources/images/JLOS-logo.png"
+                src="/resources/images/jlos-logo.png"
                 alt="JLOS logo"
                 onError={(e) => {
                   e.currentTarget.onerror = null;
